@@ -3,7 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
+        android:name=".AppEntradas"
         android:allowBackup="true"
+        android:usesCleartextTraffic="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -21,5 +23,8 @@
             </intent-filter>
         </activity>
     </application>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="true"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
 
 </manifest>

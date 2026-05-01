@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/loginFragment">
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.dam.gs.appentradas.presentation.login.LoginFragment"
+        android:label="Login">
+        <action
+            android:id="@+id/action_login_to_events"
+            app:destination="@id/eventListFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/eventListFragment"
+        android:name="com.dam.gs.appentradas.presentation.events.EventListFragment"
+        android:label="Eventos">
+        <action
+            android:id="@+id/action_events_to_scanner"
+            app:destination="@id/scannerFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/scannerFragment"
+        android:name="com.dam.gs.appentradas.presentation.scanner.ScannerFragment"
+        android:label="Escáner">
+        <argument
+            android:name="eventId"
+            app:argType="integer"/>
+        <argument
+            android:name="eventName"
+            app:argType="string"/>
+    </fragment>
+
+</navigation>

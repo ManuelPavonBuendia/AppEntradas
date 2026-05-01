@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
+    id("androidx.navigation.safeargs.kotlin")
 }
 
 android {
@@ -38,6 +39,12 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+        }
+    }
 }
 
 kapt {
@@ -67,6 +74,7 @@ dependencies {
 
     // Dagger Hilt (inyección de dependencias)
     implementation("com.google.dagger:hilt-android:2.51.1")
+    implementation(libs.androidx.navigation.fragment)
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
 
     // Escáner QR
@@ -81,4 +89,10 @@ dependencies {
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    implementation("org.apache.xmlrpc:xmlrpc-client:3.1.3")
+
+// Navigation
+    implementation("androidx.navigation:navigation-fragment-ktx:2.8.4")
+    implementation("androidx.navigation:navigation-ui-ktx:2.8.4")
 }
