@@ -20,6 +20,9 @@
         <action
             android:id="@+id/action_events_to_scanner"
             app:destination="@id/scannerFragment"/>
+        <action
+            android:id="@+id/action_events_to_settings"
+            app:destination="@id/settingsFragment"/>
     </fragment>
 
     <fragment
@@ -32,6 +35,14 @@
         <argument
             android:name="eventName"
             app:argType="string"/>
+        <action
+            android:id="@+id/action_scanner_to_settings"
+            app:destination="@id/settingsFragment"/>
     </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.dam.gs.appentradas.presentation.settings.SettingsFragment"
+        android:label="Ajustes"/>
 
 </navigation>

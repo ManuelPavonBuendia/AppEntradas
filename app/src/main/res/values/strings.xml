@@ -1,3 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AppEntradas</string>
+    <string name="app_name">Eventum</string>
+    <string name="login_titulo">Acceso</string>
+    <string name="login_usuario">Usuario</string>
+    <string name="login_password">Contraseña</string>
+    <string name="login_boton">Entrar</string>
+    <string name="login_error">Error de autenticación</string>
+    <string name="eventos_titulo">Eventos</string>
+    <string name="eventos_asistentes">asistentes</string>
+    <string name="eventos_vacio">No hay eventos disponibles</string>
+    <string name="scanner_titulo">Escáner</string>
+    <string name="scanner_listo">Listo para escanear</string>
+    <string name="scanner_apunta">Apunta la cámara al código QR</string>
+    <string name="scanner_valido">Acceso válido</string>
+    <string name="scanner_usado">Entrada ya utilizada</string>
+    <string name="scanner_invalido">Acceso denegado</string>
+    <string name="ajustes_titulo">Ajustes</string>
+    <string name="ajustes_idioma">Idioma</string>
+    <string name="ajustes_tema">Tema</string>
+    <string name="ajustes_tema_claro">Claro</string>
+    <string name="ajustes_tema_oscuro">Oscuro</string>
+    <string name="ajustes_tema_sistema">Sistema</string>
+    <string name="ajustes_cerrar_sesion">Cerrar sesión</string>
+    <string name="ajustes_idioma_es">Español</string>
+    <string name="ajustes_idioma_en">English</string>
 </resources>

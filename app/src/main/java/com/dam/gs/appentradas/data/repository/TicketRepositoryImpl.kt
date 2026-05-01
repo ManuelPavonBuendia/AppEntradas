@@ -4,11 +4,11 @@ import com.dam.gs.appentradas.core.AppConstants
 import com.dam.gs.appentradas.domain.model.Event
 import com.dam.gs.appentradas.domain.model.Ticket
 import com.dam.gs.appentradas.domain.repository.TicketRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.apache.xmlrpc.client.XmlRpcClient
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl
 import java.net.URL
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 class TicketRepositoryImpl : TicketRepository {
 
@@ -16,27 +16,34 @@ class TicketRepositoryImpl : TicketRepository {
     private var password: String = ""
 
     suspend fun authenticate(username: String, password: String) {
-        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             val config = XmlRpcClientConfigImpl().apply {
                 serverURL = URL("${AppConstants.URL_ODOO}/xmlrpc/2/common")
             }
             val client = XmlRpcClient().apply { setConfig(config) }
-            uid = (client.execute("authenticate", arrayOf(
-                AppConstants.DB_NAME, username, password, emptyMap<String, Any>()
-            )) as Int)
+            uid = client.execute(
+                "authenticate",
+                arrayOf(AppConstants.DB_NAME, username, password, emptyMap<String, Any>())
+            ) as Int
             this@TicketRepositoryImpl.password = password
         }
     }
 
-    private suspend fun callKw(model: String, method: String, args: Array<Any>, kwargs: Map<String, Any>): Any {
+    private suspend fun callKw(
+        model: String,
+        method: String,
+        args: Array<Any>,
+        kwargs: Map<String, Any>
+    ): Any {
         return withContext(Dispatchers.IO) {
             val config = XmlRpcClientConfigImpl().apply {
                 serverURL = URL("${AppConstants.URL_ODOO}/xmlrpc/2/object")
             }
             val client = XmlRpcClient().apply { setConfig(config) }
-            client.execute("execute_kw", arrayOf(
-                AppConstants.DB_NAME, uid, password, model, method, args, kwargs
-            ))
+            client.execute(
+                "execute_kw",
+                arrayOf(AppConstants.DB_NAME, uid, password, model, method, args, kwargs)
+            )
         }
     }
 
@@ -44,15 +51,15 @@ class TicketRepositoryImpl : TicketRepository {
         val result = callKw(
             model = AppConstants.MODEL_EVENTO,
             method = AppConstants.METHOD_SEARCH_READ,
-            args = arrayOf(emptyArray<Any>()),
+            args = arrayOf(arrayOf(arrayOf(AppConstants.FIELD_STAGE_ID_NAME, AppConstants.OPERATOR_EQUALS, AppConstants.STAGE_ANUNCIADO))),
             kwargs = mapOf("fields" to listOf(AppConstants.FIELD_ID, AppConstants.FIELD_NAME))
         ) as Array<*>
 
         return result.map { item ->
             val map = item as Map<*, *>
             Event(
-                id = (map[AppConstants.FIELD_ID] as Int),
-                nombre = (map[AppConstants.FIELD_NAME] as String)
+                id = map[AppConstants.FIELD_ID] as Int,
+                nombre = map[AppConstants.FIELD_NAME] as String
             )
         }
     }

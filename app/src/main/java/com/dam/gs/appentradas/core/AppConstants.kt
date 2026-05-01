@@ -19,7 +19,7 @@ object AppConstants {
     const val FIELD_EVENT_ID = "event_id"
     const val FIELD_IMAGE = "image_128"
 
-    const val STAGE_ANUNCIADO = "Anunciado"
+    const val STAGE_ANUNCIADO = "Announced"
     const val OPERATOR_EQUALS = "="
     const val SIN_NOMBRE = "Sin nombre"
 }

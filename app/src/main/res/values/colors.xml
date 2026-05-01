@@ -2,4 +2,27 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Colores principales -->
+    <color name="primary">#2D1B69</color>
+    <color name="primary_dark">#1A0F3E</color>
+    <color name="primary_light">#4A2FA0</color>
+    <color name="accent">#00D4FF</color>
+
+    <!-- Fondos -->
+    <color name="background">#F0EFF8</color>
+    <color name="surface">#FFFFFF</color>
+
+    <!-- Estados del escáner -->
+    <color name="valid">#2E7D32</color>
+    <color name="valid_light">#E8F5E9</color>
+    <color name="used">#E65100</color>
+    <color name="used_light">#FFF3E0</color>
+    <color name="invalid">#B71C1C</color>
+    <color name="invalid_light">#FFEBEE</color>
+
+    <!-- Texto -->
+    <color name="text_primary">#1A0F3E</color>
+    <color name="text_secondary">#6B5B95</color>
+    <color name="text_on_primary">#FFFFFF</color>
 </resources>
