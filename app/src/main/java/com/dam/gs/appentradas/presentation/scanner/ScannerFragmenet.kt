@@ -7,7 +7,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.OptIn
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -15,6 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
+import com.dam.gs.appentradas.R
 import com.dam.gs.appentradas.databinding.FragmentScannerBinding
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -61,6 +64,7 @@ class ScannerFragment : Fragment() {
         observeViewModel()
     }
 
+    @OptIn(ExperimentalGetImage::class)
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
         cameraProviderFuture.addListener({
@@ -101,31 +105,31 @@ class ScannerFragment : Fragment() {
         viewModel.scanState.observe(viewLifecycleOwner) { state ->
             when (state) {
                 is ScanState.Ready -> {
-                    binding.tvResultado.text = "Listo para escanear"
+                    binding.tvResultado.text = getString(R.string.scanner_listo)
                     binding.tvCliente.text = ""
-                    binding.root.setBackgroundColor(
-                        ContextCompat.getColor(requireContext(), android.R.color.black)
+                    binding.llResultado.setBackgroundColor(
+                        ContextCompat.getColor(requireContext(), R.color.primary_dark)
                     )
                 }
                 is ScanState.Valid -> {
-                    binding.tvResultado.text = "✓ Acceso válido"
+                    binding.tvResultado.text = getString(R.string.scanner_valido)
                     binding.tvCliente.text = "${state.nombre} — ${state.cliente}"
-                    binding.root.setBackgroundColor(
-                        ContextCompat.getColor(requireContext(), android.R.color.holo_green_dark)
+                    binding.llResultado.setBackgroundColor(
+                        ContextCompat.getColor(requireContext(), R.color.valid)
                     )
                 }
                 is ScanState.AlreadyUsed -> {
-                    binding.tvResultado.text = "⚠ Ya utilizada"
+                    binding.tvResultado.text = getString(R.string.scanner_usado)
                     binding.tvCliente.text = ""
-                    binding.root.setBackgroundColor(
-                        ContextCompat.getColor(requireContext(), android.R.color.holo_orange_dark)
+                    binding.llResultado.setBackgroundColor(
+                        ContextCompat.getColor(requireContext(), R.color.used)
                     )
                 }
                 is ScanState.Invalid -> {
-                    binding.tvResultado.text = "✗ Acceso denegado"
+                    binding.tvResultado.text = getString(R.string.scanner_invalido)
                     binding.tvCliente.text = ""
-                    binding.root.setBackgroundColor(
-                        ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark)
+                    binding.llResultado.setBackgroundColor(
+                        ContextCompat.getColor(requireContext(), R.color.invalid)
                     )
                 }
                 is ScanState.Error -> {

@@ -7,7 +7,8 @@
     android:layout_marginHorizontal="12dp"
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/surface">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -21,16 +22,31 @@
             android:scaleType="centerCrop"
             android:src="@android:drawable/ic_menu_today"/>
 
-        <TextView
-            android:id="@+id/tvNombreEvento"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:orientation="vertical"
             android:gravity="center_vertical"
-            android:paddingHorizontal="16dp"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/black"/>
+            android:paddingHorizontal="16dp">
+
+            <TextView
+                android:id="@+id/tvNombreEvento"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"/>
+
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="16dp"
+            android:src="@drawable/ic_arrow_forward"
+            app:tint="@color/text_secondary"/>
 
     </LinearLayout>
 

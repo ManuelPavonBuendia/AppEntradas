@@ -55,9 +55,12 @@ class EventListFragment : Fragment() {
     }
 
     private fun onEventSelected(event: Event) {
-        val action = EventListFragmentDirections
-            .actionEventsToScanner(event.id, event.nombre)
-        findNavController().navigate(action)
+        android.util.Log.d("CLICK", "Evento seleccionado: ${event.nombre}")
+        val bundle = Bundle().apply {
+            putInt("eventId", event.id)
+            putString("eventName", event.nombre)
+        }
+        findNavController().navigate(R.id.action_events_to_scanner, bundle)
     }
 
     override fun onDestroyView() {

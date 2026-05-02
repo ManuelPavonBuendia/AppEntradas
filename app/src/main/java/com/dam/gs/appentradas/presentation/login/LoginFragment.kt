@@ -43,7 +43,11 @@ class LoginFragment : Fragment() {
                 is LoginState.Success -> findNavController().navigate(R.id.action_login_to_events)
                 is LoginState.Error -> {
                     binding.btnEntrar.isEnabled = true
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                    android.app.AlertDialog.Builder(requireContext())
+                        .setTitle(getString(R.string.login_error))
+                        .setMessage(state.message)
+                        .setPositiveButton(getString(android.R.string.ok)) { dialog, _ -> dialog.dismiss() }
+                        .show()
                 }
             }
         }

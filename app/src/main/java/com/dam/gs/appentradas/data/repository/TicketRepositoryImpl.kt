@@ -21,10 +21,14 @@ class TicketRepositoryImpl : TicketRepository {
                 serverURL = URL("${AppConstants.URL_ODOO}/xmlrpc/2/common")
             }
             val client = XmlRpcClient().apply { setConfig(config) }
-            uid = client.execute(
+            val result = client.execute(
                 "authenticate",
                 arrayOf(AppConstants.DB_NAME, username, password, emptyMap<String, Any>())
-            ) as Int
+            )
+            if (result is Boolean && !result) {
+                throw Exception("credenciales_invalidas")
+            }
+            uid = result as Int
             this@TicketRepositoryImpl.password = password
         }
     }

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Colores principales modo oscuro -->
+    <color name="primary">#7C4DFF</color>
+    <color name="primary_dark">#311B92</color>
+    <color name="primary_light">#9E80FF</color>
+    <color name="accent">#00D4FF</color>
+
+    <!-- Fondos oscuros -->
+    <color name="background">#121212</color>
+    <color name="surface">#1E1E1E</color>
+
+    <!-- Estados del escáner -->
+    <color name="valid">#4CAF50</color>
+    <color name="valid_light">#1B5E20</color>
+    <color name="used">#FF9800</color>
+    <color name="used_light">#E65100</color>
+    <color name="invalid">#F44336</color>
+    <color name="invalid_light">#B71C1C</color>
+
+    <!-- Texto -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B0B0</color>
+    <color name="text_on_primary">#FFFFFF</color>
+</resources>

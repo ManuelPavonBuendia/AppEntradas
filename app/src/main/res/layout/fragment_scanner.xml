@@ -11,19 +11,20 @@
         android:layout_weight="1"/>
 
     <LinearLayout
+        android:id="@+id/llResultado"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="120dp"
         android:orientation="vertical"
         android:gravity="center"
         android:padding="24dp"
-        android:background="@android:color/black">
+        android:background="@color/primary_dark">
 
         <TextView
             android:id="@+id/tvResultado"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Listo para escanear"
-            android:textColor="@android:color/white"
+            android:text="@string/scanner_listo"
+            android:textColor="@color/white"
             android:textSize="22sp"
             android:textStyle="bold"/>
 
@@ -31,7 +32,7 @@
             android:id="@+id/tvCliente"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
+            android:textColor="@color/white"
             android:textSize="14sp"
             android:layout_marginTop="8dp"/>
 

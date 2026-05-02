@@ -27,8 +27,11 @@ class LoginViewModel @Inject constructor(
                 android.util.Log.d("LOGIN", "Autenticación exitosa")
                 _loginState.postValue(LoginState.Success)
             } catch (e: Exception) {
-                android.util.Log.e("LOGIN", "Error: ${e.message}", e)
-                _loginState.postValue(LoginState.Error(e.message ?: "Error desconocido"))
+                val mensaje = when {
+                    e.message == "credenciales_invalidas" -> "Usuario o contraseña incorrectos"
+                    else -> "Error de conexión"
+                }
+                _loginState.postValue(LoginState.Error(mensaje))
             }
         }
     }

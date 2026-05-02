@@ -10,6 +10,5 @@
     app:title="Eventum"
     app:titleCentered="true"
     app:titleTextColor="@color/white"
-    app:titleTextAppearance="@style/TextAppearance.AppCompat.Title"
     app:navigationIconTint="@color/white"
     app:menu="@menu/menu_main"/>
