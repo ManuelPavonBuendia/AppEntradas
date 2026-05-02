@@ -48,18 +48,20 @@ class TicketRepositoryImpl : TicketRepository {
     }
 
     override suspend fun getEvents(): List<Event> {
+        android.util.Log.d("EVENTS", "Filtrando por: '${AppConstants.STAGE_ANUNCIADO}'")
         val result = callKw(
             model = AppConstants.MODEL_EVENTO,
             method = AppConstants.METHOD_SEARCH_READ,
             args = arrayOf(arrayOf(arrayOf(AppConstants.FIELD_STAGE_ID_NAME, AppConstants.OPERATOR_EQUALS, AppConstants.STAGE_ANUNCIADO))),
-            kwargs = mapOf("fields" to listOf(AppConstants.FIELD_ID, AppConstants.FIELD_NAME))
+            kwargs = mapOf("fields" to listOf(AppConstants.FIELD_ID, AppConstants.FIELD_NAME, AppConstants.FIELD_IMAGE))
         ) as Array<*>
 
         return result.map { item ->
             val map = item as Map<*, *>
             Event(
                 id = map[AppConstants.FIELD_ID] as Int,
-                nombre = map[AppConstants.FIELD_NAME] as String
+                nombre = map[AppConstants.FIELD_NAME] as String,
+                imagen = map[AppConstants.FIELD_IMAGE] as? String
             )
         }
     }

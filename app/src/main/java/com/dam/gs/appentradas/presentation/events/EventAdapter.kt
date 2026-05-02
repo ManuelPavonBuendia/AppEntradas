@@ -36,7 +36,22 @@ class EventAdapter(
 
         fun bind(event: Event) {
             binding.tvNombreEvento.text = event.nombre
-            binding.root.setOnClickListener { onEventClick(event) }
+
+            if (event.imagen != null) {
+                val imageBytes =
+                    android.util.Base64.decode(event.imagen, android.util.Base64.DEFAULT)
+                val bitmap =
+                    android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                android.util.Log.d(
+                    "IMAGE",
+                    "bitmap null: ${bitmap == null}, bytes: ${imageBytes.size}"
+                )
+                if (bitmap != null) {
+                    binding.ivEvento.setImageBitmap(bitmap)
+                } else {
+                    binding.ivEvento.setImageResource(android.R.drawable.ic_menu_today)
+                }
+            }
         }
     }
 }

@@ -17,8 +17,7 @@ object AppConstants {
     const val FIELD_PARTNER_ID = "partner_id"
     const val FIELD_STAGE_ID_NAME = "stage_id.name"
     const val FIELD_EVENT_ID = "event_id"
-    const val FIELD_IMAGE = "image_128"
-
+    const val FIELD_IMAGE = "image_1024"
     const val STAGE_ANUNCIADO = "Announced"
     const val OPERATOR_EQUALS = "="
     const val SIN_NOMBRE = "Sin nombre"
