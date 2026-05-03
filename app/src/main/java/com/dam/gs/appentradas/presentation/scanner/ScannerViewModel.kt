@@ -34,26 +34,46 @@ class ScannerViewModel @Inject constructor(
                     when (ticket.estado) {
                         "done" -> _scanState.postValue(ScanState.AlreadyUsed)
                         else -> {
-                            checkInTicket(ticket.id)
-                            _scanState.postValue(ScanState.Valid(ticket.nombre, ticket.cliente))
+                            try {
+                                checkInTicket(ticket.id)
+                                _scanState.postValue(ScanState.Valid(ticket.nombre, ticket.cliente))
+                            } catch (e: Exception) {
+                                // Odoo puede fallar al responder pero haber procesado el ticket
+                                // Verificamos el estado real
+                                val ticketActualizado = validateTicket(code, eventId, eventName)
+                                if (ticketActualizado?.estado == "done") {
+                                    _scanState.postValue(
+                                        ScanState.Valid(
+                                            ticket.nombre,
+                                            ticket.cliente
+                                        )
+                                    )
+                                } else {
+                                    _scanState.postValue(
+                                        ScanState.Error(
+                                            e.message ?: "Error desconocido"
+                                        )
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             } catch (e: Exception) {
                 _scanState.postValue(ScanState.Error(e.message ?: "Error desconocido"))
             } finally {
-                kotlinx.coroutines.delay(2000)
+                kotlinx.coroutines.delay(5000)
                 procesando = false
                 _scanState.postValue(ScanState.Ready)
             }
         }
     }
-}
 
-sealed class ScanState {
-    object Ready : ScanState()
-    object Invalid : ScanState()
-    object AlreadyUsed : ScanState()
-    data class Valid(val nombre: String, val cliente: String) : ScanState()
-    data class Error(val message: String) : ScanState()
+    sealed class ScanState {
+        object Ready : ScanState()
+        object Invalid : ScanState()
+        object AlreadyUsed : ScanState()
+        data class Valid(val nombre: String, val cliente: String) : ScanState()
+        data class Error(val message: String) : ScanState()
+    }
 }

@@ -34,6 +34,10 @@ class ScannerFragment : Fragment() {
     private val viewModel: ScannerViewModel by viewModels()
     private val args: ScannerFragmentArgs by navArgs()
     private lateinit var cameraExecutor: ExecutorService
+    private var ultimoCodigo: String = ""
+    private var ultimoTiempo: Long = 0
+
+
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -86,6 +90,16 @@ class ScannerFragment : Fragment() {
                                     ?.rawValue?.let { code ->
                                         viewModel.handleScan(code, args.eventId, args.eventName)
                                     }
+                            } .addOnSuccessListener { barcodes ->
+                                barcodes.firstOrNull { it.format == Barcode.FORMAT_QR_CODE }
+                                    ?.rawValue?.let { code ->
+                                        val ahora = System.currentTimeMillis()
+                                        if (code != ultimoCodigo || ahora - ultimoTiempo > 3000) {
+                                            ultimoCodigo = code
+                                            ultimoTiempo = ahora
+                                            viewModel.handleScan(code, args.eventId, args.eventName)
+                                        }
+                                    }
                             }
                             .addOnCompleteListener { imageProxy.close() }
                     }
@@ -104,35 +118,35 @@ class ScannerFragment : Fragment() {
     private fun observeViewModel() {
         viewModel.scanState.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is ScanState.Ready -> {
+                is ScannerViewModel.ScanState.Ready -> {
                     binding.tvResultado.text = getString(R.string.scanner_listo)
                     binding.tvCliente.text = ""
                     binding.llResultado.setBackgroundColor(
                         ContextCompat.getColor(requireContext(), R.color.primary_dark)
                     )
                 }
-                is ScanState.Valid -> {
+                is ScannerViewModel.ScanState.Valid -> {
                     binding.tvResultado.text = getString(R.string.scanner_valido)
                     binding.tvCliente.text = "${state.nombre} — ${state.cliente}"
                     binding.llResultado.setBackgroundColor(
                         ContextCompat.getColor(requireContext(), R.color.valid)
                     )
                 }
-                is ScanState.AlreadyUsed -> {
+                is ScannerViewModel.ScanState.AlreadyUsed -> {
                     binding.tvResultado.text = getString(R.string.scanner_usado)
                     binding.tvCliente.text = ""
                     binding.llResultado.setBackgroundColor(
                         ContextCompat.getColor(requireContext(), R.color.used)
                     )
                 }
-                is ScanState.Invalid -> {
+                is ScannerViewModel.ScanState.Invalid -> {
                     binding.tvResultado.text = getString(R.string.scanner_invalido)
                     binding.tvCliente.text = ""
                     binding.llResultado.setBackgroundColor(
                         ContextCompat.getColor(requireContext(), R.color.invalid)
                     )
                 }
-                is ScanState.Error -> {
+                is ScannerViewModel.ScanState.Error -> {
                     binding.tvResultado.text = "Error: ${state.message}"
                     binding.tvCliente.text = ""
                 }
