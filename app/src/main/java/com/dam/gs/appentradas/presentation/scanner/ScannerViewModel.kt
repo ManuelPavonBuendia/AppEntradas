@@ -4,6 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dam.gs.appentradas.domain.model.EstadoTicket
+import com.dam.gs.appentradas.domain.model.Ticket
 import com.dam.gs.appentradas.domain.usecase.CheckInTicket
 import com.dam.gs.appentradas.domain.usecase.ValidateTicket
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,40 +33,36 @@ class ScannerViewModel @Inject constructor(
                 if (ticket == null) {
                     _scanState.postValue(ScanState.Invalid)
                 } else {
-                    when (ticket.estado) {
-                        "done" -> _scanState.postValue(ScanState.AlreadyUsed)
-                        else -> {
-                            try {
-                                checkInTicket(ticket.id)
-                                _scanState.postValue(ScanState.Valid(ticket.nombre, ticket.cliente))
-                            } catch (e: Exception) {
-                                // Odoo puede fallar al responder pero haber procesado el ticket
-                                // Verificamos el estado real
-                                val ticketActualizado = validateTicket(code, eventId, eventName)
-                                if (ticketActualizado?.estado == "done") {
-                                    _scanState.postValue(
-                                        ScanState.Valid(
-                                            ticket.nombre,
-                                            ticket.cliente
-                                        )
-                                    )
-                                } else {
-                                    _scanState.postValue(
-                                        ScanState.Error(
-                                            e.message ?: "Error desconocido"
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    processTicket(ticket, code, eventId, eventName)
                 }
             } catch (e: Exception) {
-                _scanState.postValue(ScanState.Error(e.message ?: "Error desconocido"))
+                _scanState.postValue(ScanState.Error("Error de conexión"))
             } finally {
                 kotlinx.coroutines.delay(5000)
                 procesando = false
                 _scanState.postValue(ScanState.Ready)
+            }
+        }
+    }
+
+    private suspend fun processTicket(ticket: Ticket, code: String, eventId: Int, eventName: String) {
+        when (ticket.estado) {
+            EstadoTicket.DONE -> _scanState.postValue(ScanState.AlreadyUsed)
+            EstadoTicket.CANCELLED -> _scanState.postValue(ScanState.Invalid)
+            else -> performCheckIn(ticket, code, eventId, eventName)
+        }
+    }
+
+    private suspend fun performCheckIn(ticket: Ticket, code: String, eventId: Int, eventName: String) {
+        try {
+            checkInTicket(ticket.id)
+            _scanState.postValue(ScanState.Valid(ticket.nombre, ticket.cliente))
+        } catch (e: Exception) {
+            val ticketActualizado = validateTicket(code, eventId, eventName)
+            if (ticketActualizado?.estado == EstadoTicket.DONE) {
+                _scanState.postValue(ScanState.Valid(ticket.nombre, ticket.cliente))
+            } else {
+                _scanState.postValue(ScanState.Error("Error al registrar entrada"))
             }
         }
     }

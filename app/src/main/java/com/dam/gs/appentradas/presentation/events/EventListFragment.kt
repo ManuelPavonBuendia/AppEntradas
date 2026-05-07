@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.dam.gs.appentradas.R
 import com.dam.gs.appentradas.databinding.FragmentEventListBinding
 import com.dam.gs.appentradas.domain.model.Event
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -50,17 +51,14 @@ class EventListFragment : Fragment() {
             adapter.submitList(events)
         }
         viewModel.error.observe(viewLifecycleOwner) { error ->
-            Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
+            Snackbar.make(binding.root, error, Snackbar.LENGTH_LONG).show()
         }
     }
 
     private fun onEventSelected(event: Event) {
-        android.util.Log.d("CLICK", "Evento seleccionado: ${event.nombre}")
-        val bundle = Bundle().apply {
-            putInt("eventId", event.id)
-            putString("eventName", event.nombre)
-        }
-        findNavController().navigate(R.id.action_events_to_scanner, bundle)
+        val action = EventListFragmentDirections
+            .actionEventsToScanner(eventId = event.id, eventName = event.nombre)
+        findNavController().navigate(action)
     }
 
     override fun onDestroyView() {

@@ -2,7 +2,9 @@ package com.dam.gs.appentradas.presentation.events
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.dam.gs.appentradas.databinding.ItemEventBinding
 import com.dam.gs.appentradas.domain.model.Event
 
@@ -13,8 +15,16 @@ class EventAdapter(
     private var events: List<Event> = emptyList()
 
     fun submitList(newEvents: List<Event>) {
+        val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            override fun getOldListSize() = events.size
+            override fun getNewListSize() = newEvents.size
+            override fun areItemsTheSame(oldPos: Int, newPos: Int) =
+                events[oldPos].id == newEvents[newPos].id
+            override fun areContentsTheSame(oldPos: Int, newPos: Int) =
+                events[oldPos] == newEvents[newPos]
+        })
         events = newEvents
-        notifyDataSetChanged()
+        diff.dispatchUpdatesTo(this)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventViewHolder {
@@ -38,14 +48,10 @@ class EventAdapter(
             binding.tvNombreEvento.text = event.nombre
 
             if (event.imagen != null) {
-                val imageBytes = android.util.Base64.decode(event.imagen, android.util.Base64.DEFAULT)
-                val bitmap = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                android.util.Log.d("IMAGE", "bitmap null: ${bitmap == null}, bytes: ${imageBytes.size}")
-                if (bitmap != null) {
-                    binding.ivEvento.setImageBitmap(bitmap)
-                } else {
-                    binding.ivEvento.setImageResource(android.R.drawable.ic_menu_today)
-                }
+                val bytes = android.util.Base64.decode(event.imagen, android.util.Base64.DEFAULT)
+                binding.ivEvento.load(bytes)
+            } else {
+                binding.ivEvento.setImageResource(android.R.drawable.ic_menu_today)
             }
 
             binding.root.setOnClickListener { onEventClick(event) }

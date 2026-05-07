@@ -37,6 +37,9 @@ class ScannerFragment : Fragment() {
     private var ultimoCodigo: String = ""
     private var ultimoTiempo: Long = 0
 
+    private val barcodeScanner = BarcodeScanning.getClient()
+
+
 
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -73,83 +76,77 @@ class ScannerFragment : Fragment() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(binding.previewView.surfaceProvider)
-            }
-            val imageAnalyzer = ImageAnalysis.Builder()
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-                .also { analysis ->
-                    analysis.setAnalyzer(cameraExecutor) { imageProxy ->
-                        val image = InputImage.fromMediaImage(
-                            imageProxy.image!!, imageProxy.imageInfo.rotationDegrees
-                        )
-                        BarcodeScanning.getClient().process(image)
-                            .addOnSuccessListener { barcodes ->
-                                barcodes.firstOrNull { it.format == Barcode.FORMAT_QR_CODE }
-                                    ?.rawValue?.let { code ->
-                                        viewModel.handleScan(code, args.eventId, args.eventName)
-                                    }
-                            } .addOnSuccessListener { barcodes ->
-                                barcodes.firstOrNull { it.format == Barcode.FORMAT_QR_CODE }
-                                    ?.rawValue?.let { code ->
-                                        val ahora = System.currentTimeMillis()
-                                        if (code != ultimoCodigo || ahora - ultimoTiempo > 3000) {
-                                            ultimoCodigo = code
-                                            ultimoTiempo = ahora
-                                            viewModel.handleScan(code, args.eventId, args.eventName)
-                                        }
-                                    }
-                            }
-                            .addOnCompleteListener { imageProxy.close() }
-                    }
-                }
-
             cameraProvider.unbindAll()
             cameraProvider.bindToLifecycle(
                 viewLifecycleOwner,
                 CameraSelector.DEFAULT_BACK_CAMERA,
-                preview,
-                imageAnalyzer
+                buildPreview(),
+                buildImageAnalyzer()
             )
         }, ContextCompat.getMainExecutor(requireContext()))
+    }
+
+    private fun buildPreview(): Preview {
+        return Preview.Builder().build().also {
+            it.setSurfaceProvider(binding.previewView.surfaceProvider)
+        }
+    }
+
+    @OptIn(ExperimentalGetImage::class)
+    private fun buildImageAnalyzer(): ImageAnalysis {
+        return ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            .also { analysis ->
+                analysis.setAnalyzer(cameraExecutor) { imageProxy ->
+                    val image = InputImage.fromMediaImage(
+                        imageProxy.image ?: return@setAnalyzer,
+                        imageProxy.imageInfo.rotationDegrees
+                    )
+                    processImage(image, imageProxy)
+                }
+            }
+    }
+
+    private fun processImage(image: InputImage, imageProxy: androidx.camera.core.ImageProxy) {
+        barcodeScanner.process(image)
+            .addOnSuccessListener { barcodes ->
+                barcodes.firstOrNull { it.format == Barcode.FORMAT_QR_CODE }
+                    ?.rawValue?.let { code ->
+                        val ahora = System.currentTimeMillis()
+                        if (code != ultimoCodigo || ahora - ultimoTiempo > 3000) {
+                            ultimoCodigo = code
+                            ultimoTiempo = ahora
+                            viewModel.handleScan(code, args.eventId, args.eventName)
+                        }
+                    }
+            }
+            .addOnCompleteListener { imageProxy.close() }
+    }
+    private fun updateResultado(
+        texto: String,
+        cliente: String = "",
+        colorRes: Int = R.color.primary_dark
+    ) {
+        binding.tvResultado.text = texto
+        binding.tvCliente.text = cliente
+        binding.llResultado.setBackgroundColor(
+            ContextCompat.getColor(requireContext(), colorRes)
+        )
     }
 
     private fun observeViewModel() {
         viewModel.scanState.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is ScannerViewModel.ScanState.Ready -> {
-                    binding.tvResultado.text = getString(R.string.scanner_listo)
-                    binding.tvCliente.text = ""
-                    binding.llResultado.setBackgroundColor(
-                        ContextCompat.getColor(requireContext(), R.color.primary_dark)
-                    )
-                }
-                is ScannerViewModel.ScanState.Valid -> {
-                    binding.tvResultado.text = getString(R.string.scanner_valido)
-                    binding.tvCliente.text = "${state.nombre} — ${state.cliente}"
-                    binding.llResultado.setBackgroundColor(
-                        ContextCompat.getColor(requireContext(), R.color.valid)
-                    )
-                }
-                is ScannerViewModel.ScanState.AlreadyUsed -> {
-                    binding.tvResultado.text = getString(R.string.scanner_usado)
-                    binding.tvCliente.text = ""
-                    binding.llResultado.setBackgroundColor(
-                        ContextCompat.getColor(requireContext(), R.color.used)
-                    )
-                }
-                is ScannerViewModel.ScanState.Invalid -> {
-                    binding.tvResultado.text = getString(R.string.scanner_invalido)
-                    binding.tvCliente.text = ""
-                    binding.llResultado.setBackgroundColor(
-                        ContextCompat.getColor(requireContext(), R.color.invalid)
-                    )
-                }
-                is ScannerViewModel.ScanState.Error -> {
-                    binding.tvResultado.text = "Error: ${state.message}"
-                    binding.tvCliente.text = ""
-                }
+                is ScannerViewModel.ScanState.Ready -> updateResultado(getString(R.string.scanner_listo))
+                is ScannerViewModel.ScanState.Valid -> updateResultado(
+                    getString(R.string.scanner_valido),
+                    cliente = "${state.nombre} — ${state.cliente}",
+                    colorRes = R.color.valid
+                )
+                is ScannerViewModel.ScanState.AlreadyUsed -> updateResultado(getString(R.string.scanner_usado), colorRes = R.color.used)
+                is ScannerViewModel.ScanState.Invalid -> updateResultado(getString(R.string.scanner_invalido), colorRes = R.color.invalid)
+                is ScannerViewModel.ScanState.Error -> updateResultado("Error: ${state.message}")
             }
         }
     }

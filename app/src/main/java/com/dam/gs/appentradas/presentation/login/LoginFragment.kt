@@ -4,12 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.dam.gs.appentradas.R
 import com.dam.gs.appentradas.databinding.FragmentLoginBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -43,7 +43,7 @@ class LoginFragment : Fragment() {
                 is LoginState.Success -> findNavController().navigate(R.id.action_login_to_events)
                 is LoginState.Error -> {
                     binding.btnEntrar.isEnabled = true
-                    android.app.AlertDialog.Builder(requireContext())
+                    MaterialAlertDialogBuilder(requireContext())
                         .setTitle(getString(R.string.login_error))
                         .setMessage(state.message)
                         .setPositiveButton(getString(android.R.string.ok)) { dialog, _ -> dialog.dismiss() }

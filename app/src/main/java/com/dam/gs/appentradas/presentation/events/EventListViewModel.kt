@@ -24,13 +24,10 @@ class EventListViewModel @Inject constructor(
     fun loadEvents() {
         viewModelScope.launch {
             try {
-                android.util.Log.d("EVENTS", "Cargando eventos...")
                 val result = getEvents()
-                android.util.Log.d("EVENTS", "Eventos cargados: ${result.size}")
                 _events.postValue(result)
             } catch (e: Exception) {
-                android.util.Log.e("EVENTS", "Error: ${e.message}", e)
-                _error.postValue(e.message ?: "Error desconocido")
+                _error.postValue("No se pudieron cargar los eventos")
             }
         }
     }

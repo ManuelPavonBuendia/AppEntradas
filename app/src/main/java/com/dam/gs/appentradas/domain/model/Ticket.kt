@@ -5,5 +5,5 @@ data class Ticket(
     val nombre: String,
     val cliente: String,
     val evento: String,
-    val estado: String
+    val estado: EstadoTicket
 )

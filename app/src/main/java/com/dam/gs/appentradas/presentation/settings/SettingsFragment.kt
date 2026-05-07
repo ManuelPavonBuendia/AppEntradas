@@ -1,5 +1,6 @@
 package com.dam.gs.appentradas.presentation.settings
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,8 +9,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.dam.gs.appentradas.R
+import com.dam.gs.appentradas.core.constants.AppConstants
 import com.dam.gs.appentradas.databinding.FragmentSettingsBinding
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -18,6 +21,9 @@ class SettingsFragment : Fragment() {
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
+
+    private val viewModel: SettingsViewModel by viewModels()
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,15 +41,15 @@ class SettingsFragment : Fragment() {
     }
 
     private fun cargarPreferencias() {
-        val prefs = requireActivity().getSharedPreferences("ajustes", 0)
+        val prefs = requireActivity().getSharedPreferences(AppConstants.PREFS_NAME, Context.MODE_PRIVATE)
 
-        when (prefs.getString("idioma", "es")) {
+        when (prefs.getString(AppConstants.PREF_IDIOMA, AppConstants.PREF_IDIOMA_DEFAULT)) {
             "es" -> binding.rgIdioma.check(R.id.rbEspanol)
             "en" -> binding.rgIdioma.check(R.id.rbIngles)
             else -> binding.rgIdioma.check(R.id.rbEspanol)
         }
 
-        when (prefs.getInt("tema", AppCompatDelegate.MODE_NIGHT_NO)) {
+        when (prefs.getInt(AppConstants.PREF_TEMA, AppCompatDelegate.MODE_NIGHT_NO)) {
             AppCompatDelegate.MODE_NIGHT_NO -> binding.rgTema.check(R.id.rbClaro)
             AppCompatDelegate.MODE_NIGHT_YES -> binding.rgTema.check(R.id.rbOscuro)
             else -> binding.rgTema.check(R.id.rbClaro)
@@ -51,17 +57,16 @@ class SettingsFragment : Fragment() {
     }
 
     private fun configurarListeners() {
-        val prefs = requireActivity().getSharedPreferences("ajustes", 0)
+        val prefs = requireActivity().getSharedPreferences(AppConstants.PREFS_NAME, Context.MODE_PRIVATE)
 
         binding.rgIdioma.setOnCheckedChangeListener { _, checkedId ->
             val idioma = when (checkedId) {
                 R.id.rbEspanol -> "es"
                 R.id.rbIngles -> "en"
-                else -> "es"
+                else -> AppConstants.PREF_IDIOMA_DEFAULT
             }
-            prefs.edit().putString("idioma", idioma).apply()
-            val localeList = LocaleListCompat.forLanguageTags(idioma)
-            AppCompatDelegate.setApplicationLocales(localeList)
+            prefs.edit().putString(AppConstants.PREF_IDIOMA, idioma).apply()
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(idioma))
         }
 
         binding.rgTema.setOnCheckedChangeListener { _, checkedId ->
@@ -70,12 +75,12 @@ class SettingsFragment : Fragment() {
                 R.id.rbOscuro -> AppCompatDelegate.MODE_NIGHT_YES
                 else -> AppCompatDelegate.MODE_NIGHT_NO
             }
-            prefs.edit().putInt("tema", modo).apply()
-
-            // Aplica el tema solo a esta Activity sin recrearla
+            prefs.edit().putInt(AppConstants.PREF_TEMA, modo).apply()
             (requireActivity() as AppCompatActivity).delegate.localNightMode = modo
         }
+
         binding.btnCerrarSesion.setOnClickListener {
+            viewModel.logout()
             findNavController().navigate(R.id.loginFragment)
         }
     }
