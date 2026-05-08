@@ -141,12 +141,12 @@ class ScannerFragment : Fragment() {
                 is ScannerViewModel.ScanState.Ready -> updateResultado(getString(R.string.scanner_listo))
                 is ScannerViewModel.ScanState.Valid -> updateResultado(
                     getString(R.string.scanner_valido),
-                    cliente = "${state.nombre} — ${state.cliente}",
+                    cliente = getString(R.string.scanner_cliente_formato, state.nombre, state.cliente),
                     colorRes = R.color.valid
                 )
                 is ScannerViewModel.ScanState.AlreadyUsed -> updateResultado(getString(R.string.scanner_usado), colorRes = R.color.used)
                 is ScannerViewModel.ScanState.Invalid -> updateResultado(getString(R.string.scanner_invalido), colorRes = R.color.invalid)
-                is ScannerViewModel.ScanState.Error -> updateResultado("Error: ${state.message}")
+                is ScannerViewModel.ScanState.Error -> updateResultado(state.message)
             }
         }
     }

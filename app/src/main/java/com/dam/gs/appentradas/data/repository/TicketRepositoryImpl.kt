@@ -10,6 +10,8 @@ import kotlinx.coroutines.withContext
 import org.apache.xmlrpc.client.XmlRpcClient
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl
 import java.net.URL
+import com.dam.gs.appentradas.core.exceptions.CredencialesInvalidasException
+import com.dam.gs.appentradas.core.exceptions.ConexionException
 
 class TicketRepositoryImpl : TicketRepository {
 
@@ -27,9 +29,9 @@ class TicketRepositoryImpl : TicketRepository {
                 arrayOf(AppConstants.DB_NAME, username, password, emptyMap<String, Any>())
             )
             if (result is Boolean && !result) {
-                throw Exception(AppConstants.ERROR_CREDENCIALES)
+                throw CredencialesInvalidasException()
             }
-            uid = result as Int
+            uid = result as? Int ?: throw ConexionException()
             this@TicketRepositoryImpl.password = password
         }
     }
@@ -50,10 +52,14 @@ class TicketRepositoryImpl : TicketRepository {
                 serverURL = URL("${AppConstants.URL_ODOO}${AppConstants.XMLRPC_OBJECT}")
             }
             val client = XmlRpcClient().apply { setConfig(config) }
-            client.execute(
-                AppConstants.METHOD_EXECUTE_KW,
-                arrayOf(AppConstants.DB_NAME, uid, password, model, method, args, kwargs)
-            )
+            try {
+                client.execute(
+                    AppConstants.METHOD_EXECUTE_KW,
+                    arrayOf(AppConstants.DB_NAME, uid, password, model, method, args, kwargs)
+                )
+            }catch (e: Exception){
+                throw ConexionException()
+            }
         }
     }
 

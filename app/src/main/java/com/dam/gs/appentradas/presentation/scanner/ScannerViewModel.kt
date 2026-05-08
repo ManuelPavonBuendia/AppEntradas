@@ -4,6 +4,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dam.gs.appentradas.core.constants.AppConstants
+import com.dam.gs.appentradas.core.exceptions.ConexionException
+import com.dam.gs.appentradas.core.exceptions.TicketNotFoundException
 import com.dam.gs.appentradas.domain.model.EstadoTicket
 import com.dam.gs.appentradas.domain.model.Ticket
 import com.dam.gs.appentradas.domain.usecase.CheckInTicket
@@ -35,8 +38,12 @@ class ScannerViewModel @Inject constructor(
                 } else {
                     processTicket(ticket, code, eventId, eventName)
                 }
+            } catch (e: TicketNotFoundException) {
+                _scanState.postValue(ScanState.Invalid)
+            }catch (e: ConexionException) {
+                _scanState.postValue(ScanState.Error(AppConstants.ERROR_CONEXION))
             } catch (e: Exception) {
-                _scanState.postValue(ScanState.Error("Error de conexión"))
+                _scanState.postValue(ScanState.Error(AppConstants.ERROR_DESCONOCIDO))
             } finally {
                 kotlinx.coroutines.delay(5000)
                 procesando = false
@@ -62,7 +69,7 @@ class ScannerViewModel @Inject constructor(
             if (ticketActualizado?.estado == EstadoTicket.DONE) {
                 _scanState.postValue(ScanState.Valid(ticket.nombre, ticket.cliente))
             } else {
-                _scanState.postValue(ScanState.Error("Error al registrar entrada"))
+                _scanState.postValue(ScanState.Error(AppConstants.ERROR_CHECKIN))
             }
         }
     }

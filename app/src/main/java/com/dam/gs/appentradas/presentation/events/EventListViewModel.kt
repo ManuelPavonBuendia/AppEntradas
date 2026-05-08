@@ -4,6 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dam.gs.appentradas.core.constants.AppConstants
+import com.dam.gs.appentradas.core.exceptions.ConexionException
 import com.dam.gs.appentradas.domain.model.Event
 import com.dam.gs.appentradas.domain.usecase.GetEvents
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,8 +28,10 @@ class EventListViewModel @Inject constructor(
             try {
                 val result = getEvents()
                 _events.postValue(result)
+            } catch (e: ConexionException) {
+                _error.postValue(AppConstants.ERROR_CARGAR_EVENTOS)
             } catch (e: Exception) {
-                _error.postValue("No se pudieron cargar los eventos")
+                _error.postValue(AppConstants.ERROR_DESCONOCIDO)
             }
         }
     }

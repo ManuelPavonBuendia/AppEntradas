@@ -44,8 +44,8 @@ class SettingsFragment : Fragment() {
         val prefs = requireActivity().getSharedPreferences(AppConstants.PREFS_NAME, Context.MODE_PRIVATE)
 
         when (prefs.getString(AppConstants.PREF_IDIOMA, AppConstants.PREF_IDIOMA_DEFAULT)) {
-            "es" -> binding.rgIdioma.check(R.id.rbEspanol)
-            "en" -> binding.rgIdioma.check(R.id.rbIngles)
+            AppConstants.IDIOMA_ES -> binding.rgIdioma.check(R.id.rbEspanol)
+            AppConstants.IDIOMA_EN -> binding.rgIdioma.check(R.id.rbIngles)
             else -> binding.rgIdioma.check(R.id.rbEspanol)
         }
 
@@ -61,8 +61,8 @@ class SettingsFragment : Fragment() {
 
         binding.rgIdioma.setOnCheckedChangeListener { _, checkedId ->
             val idioma = when (checkedId) {
-                R.id.rbEspanol -> "es"
-                R.id.rbIngles -> "en"
+                R.id.rbEspanol -> AppConstants.IDIOMA_ES
+                R.id.rbIngles -> AppConstants.IDIOMA_EN
                 else -> AppConstants.PREF_IDIOMA_DEFAULT
             }
             prefs.edit().putString(AppConstants.PREF_IDIOMA, idioma).apply()

@@ -4,6 +4,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dam.gs.appentradas.core.constants.AppConstants
+import com.dam.gs.appentradas.core.exceptions.ConexionException
+import com.dam.gs.appentradas.core.exceptions.CredencialesInvalidasException
 import com.dam.gs.appentradas.domain.repository.TicketRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -20,19 +23,19 @@ class LoginViewModel @Inject constructor(
     fun login(username: String, password: String) {
         viewModelScope.launch {
             if (username.isEmpty() || password.isEmpty()) {
-                _loginState.postValue(LoginState.Error("Rellena todos los campos"))
+                _loginState.postValue(LoginState.Error(AppConstants.ERROR_CAMPOS_VACIOS))
                 return@launch
             }
             _loginState.postValue(LoginState.Loading)
             try {
                 repository.authenticate(username, password)
                 _loginState.postValue(LoginState.Success)
-            }  catch (e: Exception) {
-                val mensaje = when {
-                    e.message == "credenciales_invalidas" -> "Usuario o contraseña incorrectos"
-                    else -> "Error de conexión"
-                }
-                _loginState.postValue(LoginState.Error(mensaje))
+            }catch (e: CredencialesInvalidasException) {
+                _loginState.postValue(LoginState.Error(AppConstants.ERROR_CREDENCIALES_MSG))
+            }catch (e: ConexionException) {
+                _loginState.postValue(LoginState.Error(AppConstants.ERROR_CONEXION))
+            }catch (e: Exception) {
+                _loginState.postValue(LoginState.Error(AppConstants.ERROR_DESCONOCIDO))
             }
         }
     }
