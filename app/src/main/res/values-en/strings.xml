@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Eventum</string>
+    <string name="login_titulo">Eventum</string>
+    <string name="login_usuario">Username</string>
+    <string name="login_password">Password</string>
+    <string name="login_boton">Sign in</string>
+    <string name="login_error">Authentication error</string>
+    <string name="eventos_titulo">Events</string>
+    <string name="eventos_asistentes">attendees</string>
+    <string name="eventos_vacio">No events available</string>
+    <string name="scanner_titulo">Scanner</string>
+    <string name="scanner_listo">Ready to scan</string>
+    <string name="scanner_apunta">Point the camera at the QR code</string>
+    <string name="scanner_valido">Access granted</string>
+    <string name="scanner_usado">Ticket already used</string>
+    <string name="scanner_invalido">Access denied</string>
+    <string name="ajustes_titulo">Settings</string>
+    <string name="ajustes_idioma">Language</string>
+    <string name="ajustes_tema">Theme</string>
+    <string name="ajustes_tema_claro">Light</string>
+    <string name="ajustes_tema_oscuro">Dark</string>
+    <string name="ajustes_tema_sistema">System</string>
+    <string name="ajustes_cerrar_sesion">Sign out</string>
+    <string name="ajustes_idioma_es">Spanish</string>
+    <string name="ajustes_idioma_en">English</string>
+    <string name="scanner_cliente_formato">%1$s — %2$s</string>
+</resources>
