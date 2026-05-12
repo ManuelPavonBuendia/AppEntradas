@@ -111,15 +111,16 @@ graph TB
 
 ```mermaid
 graph LR
-    subgraph presentation [presentation]
+    subgraph presentation [Carpeta: presentation]
         direction LR
-        controller[controller]
-        pages[pages]
+        events[events]
+        login[login]
+        scanner[scanner]
+        settings[settings]
     end
 
     style presentation fill:#fffde7,stroke:#fbc02d,stroke-width:2px
-    style controller fill:#ede7f6,stroke:#7e57c2
-    style pages fill:#ede7f6,stroke:#7e57c2
+
 ```
 
 </div>
