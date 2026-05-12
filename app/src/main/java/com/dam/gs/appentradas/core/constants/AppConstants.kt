@@ -1,8 +1,8 @@
 package com.dam.gs.appentradas.core.constants
 
 object AppConstants {
-    const val DB_NAME = "edu-pruebaeventos"
-    const val URL_ODOO = "https://edu-pruebaeventos.odoo.com"
+    const val DB_NAME = "edu-eventum1"
+    const val URL_ODOO = "https://edu-eventum1.odoo.com/"
     const val FIELD_BARCODE = "barcode"
     const val FIELD_EVENT_ID = "event_id"
     const val FIELD_ID = "id"
