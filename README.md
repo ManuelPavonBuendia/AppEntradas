@@ -42,12 +42,14 @@ graph TD
     lib --> core
     lib --> data
     lib --> domain
+    lib --> inyection
     lib --> presentation
 
     style lib fill:#e1f5fe,stroke:#01579b,stroke-width:2px
     style core fill:#f3e5f5,stroke:#7b1fa2
     style data fill:#f3e5f5,stroke:#7b1fa2
     style domain fill:#f3e5f5,stroke:#7b1fa2
+    style inyection fill:#f3e5f5,stroke:#7b1fa2
     style presentation fill:#f3e5f5,stroke:#7b1fa2
 ```
 </div>
