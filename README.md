@@ -1,8 +1,9 @@
 # Eventum — App de control de acceso a eventos
 
+# 1. Introduccion
 Eventum es una aplicación Android nativa desarrollada en Kotlin para el control de acceso a eventos. Permite al personal escanear códigos QR de entradas y validarlas en tiempo real contra la base de datos de Odoo.
 
-## Requisitos del sistema
+# 2. Requisitos del sistema
 
 **Dispositivo:**
 - Android 7.0 (API 24) o superior
@@ -10,18 +11,16 @@ Eventum es una aplicación Android nativa desarrollada en Kotlin para el control
 - Conexión a internet
 
 **Entorno de desarrollo:**
-- Android Studio Hedgehog o superior
+- Android Studio
 - JDK 11
 - Kotlin 1.9 o superior
 - Gradle 8.x
 
 ---
 
-## 1. Flujo de la aplicación
+# 3. Flujo de la aplicación
 
 El flujo comienza cuando el empleado abre la app e inicia sesión con sus credenciales de Odoo. Una vez autenticado, selecciona el evento en el que trabaja y empieza a escanear entradas. La app lee el código QR, consulta directamente con Odoo mediante XML-RPC y muestra el resultado al empleado en pantalla.
-
-No existe backend intermedio: la app se comunica directamente con Odoo.
 
 ```mermaid
 sequenceDiagram
@@ -62,7 +61,38 @@ sequenceDiagram
 
 ---
 
-## 2. Arquitectura
+# 4. Diagrama de Navegación
+
+El flujo de pantallas de la aplicación está diseñado para ser directo y funcional, permitiendo al empleado realizar su trabajo sin distracciones. Los componentes principales son:
+
+*   **Login:** Es la pantalla inicial de la app. El trabajador pone sus datos y, si son correctos, la aplicación le dejará acceder a los eventos.
+*   **Eventos:** En esta pantalla aparece una lista con los eventos que hay anunciados. El empleado seleccionará el evento específico de la entrada que va a escanear para cargar el contexto correcto.
+*   **Escáner:** Se abrirá la cámara del móvil para leer los códigos QR. Se escanea el código de la entrada y en la parte inferior se muestra el resultado del escaneo (Válido, Ya usado o Error).
+*   **Ajustes:** Es una pantalla con diferentes preferencias que podrá aplicar el empleado sobre la aplicación, como cambiar el idioma, activar el modo oscuro o cerrar sesión de forma segura.
+
+<div align="center">
+
+```mermaid
+graph TD
+    Login[<b>Login</b><br/>Pantalla de acceso] -->|Validar datos| Eventos[<b>Eventos</b><br/>Lista de selección]
+    Eventos -->|Seleccionar evento| Escaner[<b>Escáner</b><br/>Cámara y resultados]
+    
+    Eventos --> Ajustes[<b>Ajustes</b><br/>Preferencias]
+    Escaner --> Ajustes
+    
+    Ajustes -.->|Cerrar sesión| Login
+
+    style Login fill:#E1D5E7,stroke:#9673A6
+    style Eventos fill:#D5E8D4,stroke:#82B366
+    style Escaner fill:#D5E8D4,stroke:#82B366
+    style Ajustes fill:#F5F5F5,stroke:#666666
+```
+
+</div>
+
+---
+
+# 5. Arquitectura
 
 La app implementa **Clean Architecture** dividida en tres capas con dependencias unidireccionales: la presentación depende del dominio, y el dominio no conoce ni la presentación ni los datos.
 
@@ -122,7 +152,7 @@ classDiagram
 
 ---
 
-## 3. Estructura de paquetes
+## 5.1. Estructura de paquetes
 
 ```mermaid
 graph TD
@@ -136,7 +166,7 @@ graph TD
     classDef default fill:#EEEDFE,color:#26215C,stroke:#534AB7
 ```
 
-### 3.1 core
+### 5.1.1 core
 
 Contiene todo lo que es configuración global y valores que no cambian. Las constantes de conexión con Odoo, los nombres de los campos, los mensajes de error y las excepciones propias viven aquí para que cualquier parte de la app pueda acceder a ellos sin duplicar strings.
 
@@ -157,7 +187,7 @@ graph TD
 
 </div>
 
-### 3.2 domain
+### 5.1.2 domain
 
 Es el núcleo de la app. No depende de Android, Odoo, ni ninguna librería externa. Contiene:
 
@@ -192,7 +222,7 @@ graph TD
 </div>
 
 
-### 3.3 data
+### 5.1.3 data
 
 Contiene `TicketRepositoryImpl`, la única clase que sabe cómo hablar con Odoo. Implementa la interfaz `TicketRepository` y gestiona la sesión XML-RPC. Guarda el `uid` y la `password` en memoria como variables privadas que se obtienen al autenticarse y se limpian al hacer logout.
 
@@ -211,7 +241,7 @@ graph TD
 ```
 </div>
 
-### 3.4 injection
+### 5.1.4 injection
 
 Contiene el módulo Hilt `AppModule` que provee el repositorio como singleton. Al ser singleton, se garantiza que solo existe una instancia del repositorio en toda la app, lo que es necesario porque guarda el estado de sesión en memoria.
 
@@ -230,7 +260,7 @@ graph TD
 
 </div>
 
-### 3.5 presentation
+### 5.1.5 presentation
 
 Contiene los Fragments, ViewModels y Adapters de cada pantalla. Cada pantalla tiene su propio ViewModel que expone su estado mediante `LiveData`. Los Fragments observan ese estado y actualizan la UI. Ningún Fragment contiene lógica de negocio.
 
@@ -266,7 +296,7 @@ graph TD
 
 ---
 
-## 4. Comunicación con Odoo
+## 6. Comunicación con Odoo
 
 La app usa **XML-RPC**, el protocolo estándar de integración de Odoo. Se usan dos endpoints:
 
@@ -285,7 +315,7 @@ Los modelos y métodos usados son:
 
 ---
 
-## 5. Gestión de errores
+## 7. Gestión de errores
 
 La app define excepciones propias que extienden `RuntimeException`:
 
@@ -309,7 +339,7 @@ catch (e: CredencialesInvalidasException) {
 
 ---
 
-## 6. Dependencias principales
+## 8. Dependencias principales
 
 | Librería | Versión | Uso |
 |---|---|---|
@@ -327,7 +357,7 @@ catch (e: CredencialesInvalidasException) {
 
 ---
 
-## 7. Configuración de la conexión
+## 9. Configuración de la conexión
 
 Para apuntar a otra instancia de Odoo modifica estas dos constantes en `AppConstants.kt`:
 
@@ -342,7 +372,7 @@ El usuario de Odoo necesita:
 
 ---
 
-## 8. Tests
+## 10. Tests
 
 La estrategia de tests cubre las capas de dominio y presentación con JUnit 4 y Mockito.
 
