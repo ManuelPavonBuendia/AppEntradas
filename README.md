@@ -27,30 +27,37 @@ No existe backend intermedio: la app se comunica directamente con Odoo.
 sequenceDiagram
     autonumber
     actor Empleado
-    participant App as App (Android)
-    participant Odoo as Odoo (XML-RPC)
+    participant App as App (Móvil)
+    participant Odoo as Servidor (Odoo)
 
-    Empleado->>App: Introduce credenciales
-    App->>Odoo: authenticate(user, pass)
-    Odoo-->>App: uid
+    Note over Empleado, Odoo: Inicio de Sesión
+    Empleado->>App: Introduce sus datos
+    App->>Odoo: ¿Son correctos usuario y clave?
+    Odoo-->>App: Sí, acceso concedido
 
-    Empleado->>App: Selecciona evento
-    App->>Odoo: search_read(event.event)
-    Odoo-->>App: Lista de eventos
+    Note over Empleado, Odoo: Preparación
+    Empleado->>App: Elige el evento actual
+    App->>Odoo: Dame la lista de eventos
+    Odoo-->>App: Lista de eventos disponibles
 
-    Empleado->>App: Escanea código QR
-    App->>Odoo: search_read(event.registration, barcode)
-    Odoo-->>App: Datos del ticket
+    Note over Empleado, Odoo: Proceso de Escaneo
+    Empleado->>App: Escanea el código QR del ticket
+    App->>Odoo: ¿Este ticket es válido para este evento?
+    Odoo-->>App: Envía información del ticket
 
-    alt Ticket válido OPEN
-        App->>Odoo: action_set_done(ticketId)
-        Odoo-->>App: OK
-        App-->>Empleado: Acceso válido
-    else Ticket ya usado DONE
-        App-->>Empleado: Entrada ya utilizada
-    else Ticket no encontrado
-        App-->>Empleado: Acceso denegado
+   alt:
+        Note left of App: Ticket Válido
+        App->>Odoo: Marcar ticket como "Ya utilizado"
+        Odoo-->>App: Confirmado
+        App-->>Empleado: ✅ Acceso Válido
+    else 
+        Note left of App: Ya utilizado
+        App-->>Empleado: ⚠️ Entrada ya utilizada
+    else 
+        Note left of App: Error o no existe
+        App-->>Empleado: ❌ Acceso Denegado
     end
+
 ```
 
 ---
