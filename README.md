@@ -129,22 +129,6 @@ graph TD
     classDef default fill:#EEEDFE,color:#26215C,stroke:#534AB7
 ```
 
-```mermaid
-graph TD
-    infra[Infraestructura]:::layerStyle
-    infra --> data[data]:::folderStyle
-    infra --> inj[injection]:::folderStyle
-    infra --> core[core]:::folderStyle
-
-    data --> d1[TicketRepositoryImpl.kt]
-    inj --> i1[AppModule.kt]
-    core --> c1[AppConstants.kt]
-
-    classDef layerStyle fill:#534AB7,color:#fff,stroke:#3F3795,stroke-width:2px
-    classDef folderStyle fill:#EEEDFE,color:#26215C,stroke:#534AB7,stroke-dasharray: 5 5
-    classDef default fill:#FFFFFF,color:#26215C,stroke:#534AB7
-```
-
 ### 3.1 core
 
 Contiene todo lo que es configuración global y valores que no cambian. Las constantes de conexión con Odoo, los nombres de los campos, los mensajes de error y las excepciones propias viven aquí para que cualquier parte de la app pueda acceder a ellos sin duplicar strings.
