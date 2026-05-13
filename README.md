@@ -1,5 +1,25 @@
 # Eventum — App de control de acceso a eventos
 
+# Índice
+
+1. [**Introducción**](#1-introduccion)
+2. [**Requisitos del sistema**](#2-requisitos-del-sistema)
+3. [**Flujo de la aplicación**](#3-flujo-de-la-aplicacion)
+4. [**Diagrama de Navegación**](#4-diagrama-de-navegacion)
+5. [**Arquitectura**](#5-arquitectura)
+    * 5.1. [Estructura de paquetes](#51-estructura-de-paquetes)
+    * 5.1.1. [Core](#511-core)
+    * 5.1.2. [Domain](#512-domain)
+    * 5.1.3. [Data](#513-data)
+    * 5.1.4. [Injection](#514-injection)
+    * 5.1.5. [Presentation](#515-presentation)
+6. [**Comunicación con Odoo**](#6-comunicacion-con-odoo)
+7. [**Gestión de errores**](#7-gestion-de-errores)
+8. [**Dependencias principales**](#8-dependencias-principales)
+9. [**Configuración de la conexión**](#9-configuracion-de-la-conexion)
+10. [**Tests**](#10-tests)
+
+---
 # 1. Introduccion
 Eventum es una aplicación Android nativa desarrollada en Kotlin para el control de acceso a eventos. Permite al personal escanear códigos QR de entradas y validarlas en tiempo real contra la base de datos de Odoo.
 
