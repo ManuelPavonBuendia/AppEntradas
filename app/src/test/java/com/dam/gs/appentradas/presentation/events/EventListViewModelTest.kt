@@ -1,7 +1,7 @@
 package com.dam.gs.appentradas.presentation.events
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.dam.gs.appentradas.core.constants.AppConstants
+import com.dam.gs.appentradas.R
 import com.dam.gs.appentradas.core.exceptions.ConexionException
 import com.dam.gs.appentradas.domain.model.Event
 import com.dam.gs.appentradas.domain.usecase.GetEvents
@@ -58,7 +58,7 @@ class EventListViewModelTest {
     fun devuelveError() = runTest {
         whenever(getEvents()).thenThrow(ConexionException())
         viewModel.loadEvents()
-        assert(viewModel.error.value == AppConstants.ERROR_CARGAR_EVENTOS)
+        assert(viewModel.error.value == R.string.error_cargar_eventos)
     }
 
     @Test

@@ -17,6 +17,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import com.dam.gs.appentradas.R
+
 
 @ExperimentalCoroutinesApi
 class LoginViewModelTest {
@@ -49,7 +51,7 @@ class LoginViewModelTest {
     fun camposVaciosError() = runTest {
         viewModel.login(AppConstants.EMPTY_STRING, AppConstants.EMPTY_STRING)
         assert(viewModel.loginState.value is LoginState.Error)
-        assert((viewModel.loginState.value as LoginState.Error).message == AppConstants.ERROR_CAMPOS_VACIOS)
+        assert((viewModel.loginState.value as LoginState.Error).messageRes == R.string.error_campos_vacios)
     }
 
     @Test
@@ -57,7 +59,7 @@ class LoginViewModelTest {
         whenever(repository.authenticate(USUARIO_TEST, PASSWORD_INCORRECTA))
             .thenThrow(CredencialesInvalidasException())
         viewModel.login(USUARIO_TEST, PASSWORD_INCORRECTA)
-        assert((viewModel.loginState.value as LoginState.Error).message == AppConstants.ERROR_CREDENCIALES_MSG)
+        assert((viewModel.loginState.value as LoginState.Error).messageRes == R.string.error_credenciales)
     }
 
     @Test
@@ -65,7 +67,7 @@ class LoginViewModelTest {
         whenever(repository.authenticate(USUARIO_TEST, PASSWORD_TEST))
             .thenThrow(ConexionException())
         viewModel.login(USUARIO_TEST, PASSWORD_TEST)
-        assert((viewModel.loginState.value as LoginState.Error).message == AppConstants.ERROR_CONEXION)
+        assert((viewModel.loginState.value as LoginState.Error).messageRes == R.string.error_conexion)
     }
 
     @Test
