@@ -7,7 +7,7 @@
     <fragment
         android:id="@+id/loginFragment"
         android:name="com.dam.gs.appentradas.presentation.login.LoginFragment"
-        android:label="Login">
+        android:label="@string/titulo_login">
         <action
             android:id="@+id/action_login_to_events"
             app:destination="@id/eventListFragment"/>
@@ -16,7 +16,7 @@
     <fragment
         android:id="@+id/eventListFragment"
         android:name="com.dam.gs.appentradas.presentation.events.EventListFragment"
-        android:label="Eventos">
+        android:label="@string/titulo_eventos">
         <action
             android:id="@+id/action_events_to_scanner"
             app:destination="@id/scannerFragment"/>
@@ -28,7 +28,7 @@
     <fragment
         android:id="@+id/scannerFragment"
         android:name="com.dam.gs.appentradas.presentation.scanner.ScannerFragment"
-        android:label="Escáner">
+        android:label="@string/titulo_scanner">
         <argument
             android:name="eventId"
             app:argType="integer"/>
@@ -43,6 +43,6 @@
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.dam.gs.appentradas.presentation.settings.SettingsFragment"
-        android:label="Ajustes"/>
+        android:label="@string/titulo_ajustes"/>
 
 </navigation>

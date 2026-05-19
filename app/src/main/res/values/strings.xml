@@ -25,4 +25,14 @@
     <string name="ajustes_idioma_es">Español</string>
     <string name="ajustes_idioma_en">English</string>
     <string name="scanner_cliente_formato">%1$s — %2$s</string>
+    <string name="titulo_login">Inicio Sesión</string>
+    <string name="titulo_eventos">Eventos</string>
+    <string name="titulo_scanner">Escáner</string>
+    <string name="titulo_ajustes">Ajustes</string>
+    <string name="error_campos_vacios">Rellena todos los campos</string>
+    <string name="error_credenciales">Usuario o contraseña incorrectos</string>
+    <string name="error_conexion">Error de conexión</string>
+    <string name="error_desconocido">Error desconocido</string>
+    <string name="error_cargar_eventos">No se pudieron cargar los eventos</string>
+    <string name="error_checkin">Error al registrar entrada</string>
 </resources>

@@ -146,7 +146,7 @@ class ScannerFragment : Fragment() {
                 )
                 is ScannerViewModel.ScanState.AlreadyUsed -> updateResultado(getString(R.string.scanner_usado), colorRes = R.color.used)
                 is ScannerViewModel.ScanState.Invalid -> updateResultado(getString(R.string.scanner_invalido), colorRes = R.color.invalid)
-                is ScannerViewModel.ScanState.Error -> updateResultado(state.message)
+                is ScannerViewModel.ScanState.Error -> updateResultado(getString(state.messageRes))
             }
         }
     }

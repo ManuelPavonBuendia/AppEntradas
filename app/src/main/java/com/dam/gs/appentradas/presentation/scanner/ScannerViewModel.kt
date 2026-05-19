@@ -1,9 +1,11 @@
 package com.dam.gs.appentradas.presentation.scanner
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dam.gs.appentradas.R
 import com.dam.gs.appentradas.core.constants.AppConstants
 import com.dam.gs.appentradas.core.exceptions.ConexionException
 import com.dam.gs.appentradas.core.exceptions.TicketNotFoundException
@@ -40,11 +42,12 @@ class ScannerViewModel @Inject constructor(
                 }
             } catch (e: TicketNotFoundException) {
                 _scanState.postValue(ScanState.Invalid)
-            }catch (e: ConexionException) {
-                _scanState.postValue(ScanState.Error(AppConstants.ERROR_CONEXION))
+            } catch (e: ConexionException) {
+                _scanState.postValue(ScanState.Error(R.string.error_conexion))
             } catch (e: Exception) {
-                _scanState.postValue(ScanState.Error(AppConstants.ERROR_DESCONOCIDO))
-            } finally {
+                _scanState.postValue(ScanState.Error(R.string.error_desconocido))
+            }
+            finally {
                 kotlinx.coroutines.delay(5000)
                 procesando = false
                 _scanState.postValue(ScanState.Ready)
@@ -69,7 +72,7 @@ class ScannerViewModel @Inject constructor(
             if (ticketActualizado?.estado == EstadoTicket.DONE) {
                 _scanState.postValue(ScanState.Valid(ticket.nombre, ticket.cliente))
             } else {
-                _scanState.postValue(ScanState.Error(AppConstants.ERROR_CHECKIN))
+                _scanState.postValue(ScanState.Error(R.string.error_checkin))
             }
         }
     }
@@ -79,6 +82,6 @@ class ScannerViewModel @Inject constructor(
         object Invalid : ScanState()
         object AlreadyUsed : ScanState()
         data class Valid(val nombre: String, val cliente: String) : ScanState()
-        data class Error(val message: String) : ScanState()
+        data class Error(@StringRes val messageRes: Int) : ScanState()
     }
 }

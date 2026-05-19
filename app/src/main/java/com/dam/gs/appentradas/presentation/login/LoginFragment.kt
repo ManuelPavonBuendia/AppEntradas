@@ -45,7 +45,7 @@ class LoginFragment : Fragment() {
                     binding.btnEntrar.isEnabled = true
                     MaterialAlertDialogBuilder(requireContext())
                         .setTitle(getString(R.string.login_error))
-                        .setMessage(state.message)
+                        .setMessage(getString(state.messageRes)) // ✅ resuelve el string aquí
                         .setPositiveButton(getString(android.R.string.ok)) { dialog, _ -> dialog.dismiss() }
                         .show()
                 }

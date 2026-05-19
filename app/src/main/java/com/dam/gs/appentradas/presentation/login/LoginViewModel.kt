@@ -1,9 +1,11 @@
 package com.dam.gs.appentradas.presentation.login
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dam.gs.appentradas.R
 import com.dam.gs.appentradas.core.constants.AppConstants
 import com.dam.gs.appentradas.core.exceptions.ConexionException
 import com.dam.gs.appentradas.core.exceptions.CredencialesInvalidasException
@@ -13,29 +15,26 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(
-    private val repository: TicketRepository
-) : ViewModel() {
-
+class LoginViewModel @Inject constructor(private val repository: TicketRepository) : ViewModel() {
     private val _loginState = MutableLiveData<LoginState>()
     val loginState: LiveData<LoginState> = _loginState
 
     fun login(username: String, password: String) {
         viewModelScope.launch {
             if (username.isEmpty() || password.isEmpty()) {
-                _loginState.postValue(LoginState.Error(AppConstants.ERROR_CAMPOS_VACIOS))
+                _loginState.postValue(LoginState.Error(R.string.error_campos_vacios))
                 return@launch
             }
             _loginState.postValue(LoginState.Loading)
             try {
                 repository.authenticate(username, password)
                 _loginState.postValue(LoginState.Success)
-            }catch (e: CredencialesInvalidasException) {
-                _loginState.postValue(LoginState.Error(AppConstants.ERROR_CREDENCIALES_MSG))
-            }catch (e: ConexionException) {
-                _loginState.postValue(LoginState.Error(AppConstants.ERROR_CONEXION))
-            }catch (e: Exception) {
-                _loginState.postValue(LoginState.Error(AppConstants.ERROR_DESCONOCIDO))
+            } catch (e: CredencialesInvalidasException) {
+                _loginState.postValue(LoginState.Error(R.string.error_credenciales))
+            } catch (e: ConexionException) {
+                _loginState.postValue(LoginState.Error(R.string.error_conexion))
+            } catch (e: Exception) {
+                _loginState.postValue(LoginState.Error(R.string.error_desconocido))
             }
         }
     }
@@ -44,5 +43,5 @@ class LoginViewModel @Inject constructor(
 sealed class LoginState {
     object Loading : LoginState()
     object Success : LoginState()
-    data class Error(val message: String) : LoginState()
+    data class Error(@StringRes val messageRes: Int) : LoginState()
 }
