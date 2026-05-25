@@ -58,6 +58,23 @@
             android:textSize="16sp"
             app:cornerRadius="12dp"
             xmlns:app="http://schemas.android.com/apk/res-auto"/>
+        <TextView
+            android:id="@+id/tvProgreso"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            android:text=""/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            android:max="100"/>
 
     </LinearLayout>
 

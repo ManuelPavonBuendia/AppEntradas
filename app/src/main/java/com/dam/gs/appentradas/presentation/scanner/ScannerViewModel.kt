@@ -65,7 +65,7 @@ class ScannerViewModel @Inject constructor(
 
     private suspend fun performCheckIn(ticket: Ticket, code: String, eventId: Int, eventName: String) {
         try {
-            checkInTicket(ticket.id)
+            checkInTicket(ticket.id, code)
             _scanState.postValue(ScanState.Valid(ticket.nombre, ticket.cliente))
         } catch (e: Exception) {
             val ticketActualizado = validateTicket(code, eventId, eventName)

@@ -35,11 +35,9 @@ class LoginFragment : Fragment() {
 
         val prefs = requireActivity().getSharedPreferences(AppConstants.PREFS_NAME, 0)
 
-        // 1. LEER EL HISTORIAL: Recupera la lista de usuarios guardados
         val historialSet = prefs.getStringSet("historial_usuarios", emptySet()) ?: emptySet()
         val historialLista = historialSet.toList()
 
-        // 2. MOSTRAR DESPLEGABLE: Si hay nombres, se los mete al buscador del campo de texto
         if (historialLista.isNotEmpty()) {
             val adapter = ArrayAdapter(
                 requireActivity(),
@@ -57,7 +55,11 @@ class LoginFragment : Fragment() {
 
         viewModel.loginState.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is LoginState.Loading -> binding.btnEntrar.isEnabled = false
+                is LoginState.Loading -> {
+                    binding.btnEntrar.isEnabled = false
+                    binding.progressBar.visibility = View.GONE
+                    binding.tvProgreso.visibility = View.GONE
+                }
                 is LoginState.Success -> {
                     // 3. GUARDAR EN HISTORIAL: Añade el usuario actual a la lista cuando entra bien
                     val usuarioActual = binding.etUsuario.text.toString().trim()
@@ -69,6 +71,13 @@ class LoginFragment : Fragment() {
                     }
 
                     findNavController().navigate(R.id.action_login_to_events)
+                }
+                is LoginState.Descargando -> {
+                    binding.btnEntrar.isEnabled = false
+                    binding.progressBar.visibility = View.VISIBLE
+                    binding.tvProgreso.visibility = View.VISIBLE
+                    binding.progressBar.progress = state.progreso
+                    binding.tvProgreso.text = getString(R.string.descargando_entradas, state.progreso)
                 }
                 is LoginState.Error -> {
                     binding.btnEntrar.isEnabled = true

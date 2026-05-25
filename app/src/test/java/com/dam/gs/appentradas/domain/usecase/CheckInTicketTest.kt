@@ -17,20 +17,21 @@ class CheckInTicketTest {
 
     companion object {
         const val TICKET_ID_TEST = 1
+        const val BARCODE_TEST = "ABC123"
     }
 
     @Test
     fun checkInCorrecto() = runTest {
-        checkInTicket(TICKET_ID_TEST)
-        verify(repository).checkInTicket(TICKET_ID_TEST)
+        checkInTicket(TICKET_ID_TEST, BARCODE_TEST)
+        verify(repository).checkInTicket(TICKET_ID_TEST, BARCODE_TEST)
     }
 
     @Test
     fun checkInError() = runTest {
-        whenever(repository.checkInTicket(TICKET_ID_TEST))
+        whenever(repository.checkInTicket(TICKET_ID_TEST, BARCODE_TEST))
             .thenThrow(ConexionException())
         try {
-            checkInTicket(TICKET_ID_TEST)
+            checkInTicket(TICKET_ID_TEST, BARCODE_TEST)
             assert(false)
         } catch (e: ConexionException) {
             assert(true)

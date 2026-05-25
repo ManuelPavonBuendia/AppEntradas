@@ -103,7 +103,7 @@ class ScannerViewModelTest {
         whenever(validateTicket(BARCODE_TEST, 1, EVENTO_TEST_NOMBRE))
             .thenReturn(ticketValido)
             .thenReturn(ticketUsado)  // segunda llamada devuelve ticket usado
-        whenever(checkInTicket(ticketValido.id))
+        whenever(checkInTicket(ticketValido.id, BARCODE_TEST)).thenThrow(ConexionException())
             .thenThrow(ConexionException())
         viewModel.handleScan(BARCODE_TEST, 1, EVENTO_TEST_NOMBRE)
         assert(viewModel.scanState.value is ScannerViewModel.ScanState.Valid)

@@ -35,4 +35,5 @@
     <string name="error_desconocido">Error desconocido</string>
     <string name="error_cargar_eventos">No se pudieron cargar los eventos</string>
     <string name="error_checkin">Error al registrar entrada</string>
+    <string name="descargando_entradas">Descargando entradas… %d%%</string>
 </resources>

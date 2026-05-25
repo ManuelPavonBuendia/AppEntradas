@@ -1,44 +1,60 @@
 package com.dam.gs.appentradas.data.repository
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import com.dam.gs.appentradas.core.constants.AppConstants
+import com.dam.gs.appentradas.core.exceptions.ConexionException
+import com.dam.gs.appentradas.core.exceptions.CredencialesInvalidasException
+import com.dam.gs.appentradas.core.exceptions.TicketNotFoundException
+import com.dam.gs.appentradas.data.local.dao.EntradaDao
+import com.dam.gs.appentradas.data.local.dao.EventoDao
+import com.dam.gs.appentradas.data.local.dao.SesionDao
+import com.dam.gs.appentradas.data.local.entity.EntradaEntity
+import com.dam.gs.appentradas.data.local.entity.SesionEntity
+import com.dam.gs.appentradas.data.local.mapper.toEntity
+import com.dam.gs.appentradas.data.local.mapper.toEvent
+import com.dam.gs.appentradas.data.local.mapper.toTicket
 import com.dam.gs.appentradas.domain.model.EstadoTicket
 import com.dam.gs.appentradas.domain.model.Event
 import com.dam.gs.appentradas.domain.model.Ticket
 import com.dam.gs.appentradas.domain.repository.TicketRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.xmlrpc.client.XmlRpcClient
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl
+import org.mindrot.jbcrypt.BCrypt
 import java.net.URL
-import com.dam.gs.appentradas.core.exceptions.CredencialesInvalidasException
-import com.dam.gs.appentradas.core.exceptions.ConexionException
+import javax.inject.Inject
 
-class TicketRepositoryImpl : TicketRepository {
+class TicketRepositoryImpl @Inject constructor(
+    private val entradaDao: EntradaDao,
+    private val eventoDao: EventoDao,
+    private val sesionDao: SesionDao,
+    @ApplicationContext private val context: Context
+) : TicketRepository {
 
     private var uid: Int = 0
     private var password: String = ""
 
-    override suspend fun authenticate(username: String, password: String) {
-        withContext(Dispatchers.IO) {
-            val config = XmlRpcClientConfigImpl().apply {
-                serverURL = URL("${AppConstants.URL_ODOO}${AppConstants.XMLRPC_COMMON}")
-            }
-            val client = XmlRpcClient().apply { setConfig(config) }
-            val result = client.execute(
-                AppConstants.METHOD_AUTHENTICATE,
-                arrayOf(AppConstants.DB_NAME, username, password, emptyMap<String, Any>())
-            )
-            if (result is Boolean && !result) {
-                throw CredencialesInvalidasException()
-            }
-            uid = result as? Int ?: throw ConexionException()
-            this@TicketRepositoryImpl.password = password
-        }
+    // ── Red ───────────────────────────────────────────────
+
+    private fun hayConexion(): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        return cm.activeNetwork?.let {
+            cm.getNetworkCapabilities(it)
+                ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        } ?: false
     }
 
-    override suspend fun logout() {
-        uid = 0
-        password = ""
+    // ── XML-RPC ───────────────────────────────────────────
+
+    private fun clienteCommon(): XmlRpcClient {
+        val config = XmlRpcClientConfigImpl().apply {
+            serverURL = URL("${AppConstants.URL_ODOO}${AppConstants.XMLRPC_COMMON}")
+        }
+        return XmlRpcClient().apply { setConfig(config) }
     }
 
     private suspend fun callKw(
@@ -57,47 +73,258 @@ class TicketRepositoryImpl : TicketRepository {
                     AppConstants.METHOD_EXECUTE_KW,
                     arrayOf(AppConstants.DB_NAME, uid, password, model, method, args, kwargs)
                 )
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 throw ConexionException()
             }
         }
     }
 
-    override suspend fun getEvents(): List<Event> {
-        val result = callKw(
-            model = AppConstants.MODEL_EVENTO,
-            method = AppConstants.METHOD_SEARCH_READ,
-            args = arrayOf(arrayOf(arrayOf(AppConstants.FIELD_STAGE_ID_NAME, AppConstants.OPERATOR_EQUALS, AppConstants.STAGE_ANUNCIADO))),
-            kwargs = mapOf(AppConstants.FIELDS to listOf(AppConstants.FIELD_ID, AppConstants.FIELD_NAME, AppConstants.FIELD_IMAGE))
-        ) as Array<*>
+    // ── Autenticación ─────────────────────────────────────
 
-        return result.map { item ->
-            val map = item as Map<*, *>
-            Event(
-                id = map[AppConstants.FIELD_ID] as Int,
-                nombre = map[AppConstants.FIELD_NAME] as String,
-                imagen = map[AppConstants.FIELD_IMAGE] as? String
-            )
+    override suspend fun authenticate(username: String, password: String) {
+        if (hayConexion()) {
+            withContext(Dispatchers.IO) {
+                val result = clienteCommon().execute(
+                    AppConstants.METHOD_AUTHENTICATE,
+                    arrayOf(AppConstants.DB_NAME, username, password, emptyMap<String, Any>())
+                )
+                if (result is Boolean && !result) throw CredencialesInvalidasException()
+                uid = result as? Int ?: throw ConexionException()
+                this@TicketRepositoryImpl.password = password
+
+                // Guardar sesión hasheada para login offline
+                val hash = BCrypt.hashpw(password, BCrypt.gensalt())
+                sesionDao.guardarSesion(
+                    SesionEntity(
+                        uid = uid,
+                        username = username,
+                        passwordHash = hash,
+                        timestamp = System.currentTimeMillis()
+                    )
+                )
+            }
+        } else {
+            // Sin red: verificar contra sesión guardada
+            val sesion = sesionDao.getSesion() ?: throw ConexionException()
+            if (sesion.username != username) throw CredencialesInvalidasException()
+            if (!BCrypt.checkpw(password, sesion.passwordHash)) throw CredencialesInvalidasException()
+            uid = sesion.uid
+            this.password = password
         }
     }
 
-    override suspend fun validateTicket(code: String, eventId: Int, eventName: String): Ticket? {
+    override suspend fun logout() {
+        uid = 0
+        password = ""
+    }
+
+    // ── Eventos ───────────────────────────────────────────
+
+    override suspend fun getEvents(): List<Event> {
+        return if (hayConexion()) {
+            val result = callKw(
+                model = AppConstants.MODEL_EVENTO,
+                method = AppConstants.METHOD_SEARCH_READ,
+                args = arrayOf(arrayOf(arrayOf(
+                    AppConstants.FIELD_STAGE_ID_NAME,
+                    AppConstants.OPERATOR_EQUALS,
+                    AppConstants.STAGE_ANUNCIADO
+                ))),
+                kwargs = mapOf(
+                    AppConstants.FIELDS to listOf(
+                        AppConstants.FIELD_ID,
+                        AppConstants.FIELD_NAME,
+                        AppConstants.FIELD_IMAGE,
+                        "date_end",
+                        "stage_id"
+                    )
+                )
+            ) as Array<*>
+
+            val eventos = result.map { item ->
+                val map = item as Map<*, *>
+                Event(
+                    id = map[AppConstants.FIELD_ID] as Int,
+                    nombre = map[AppConstants.FIELD_NAME] as String,
+                    imagen = map[AppConstants.FIELD_IMAGE] as? String
+                )
+            }
+
+            // Guardar en Room
+            eventoDao.insertEventos(eventos.map { it.toEntity() })
+            eventos
+
+        } else {
+            eventoDao.getEventos().map { it.toEvent() }
+        }
+    }
+
+    // ── Descarga de entradas ──────────────────────────────
+
+    override suspend fun descargarEntradasEvento(
+        eventId: Int,
+        onProgreso: ((Int) -> Unit)?
+    ) {
+        if (!hayConexion()) return
+
         val result = callKw(
             model = AppConstants.MODEL_REGISTRO,
             method = AppConstants.METHOD_SEARCH_READ,
             args = arrayOf(arrayOf(
-                arrayOf(AppConstants.FIELD_BARCODE, AppConstants.OPERATOR_EQUALS, code),
                 arrayOf(AppConstants.FIELD_EVENT_ID, AppConstants.OPERATOR_EQUALS, eventId)
             )),
             kwargs = mapOf(
-                AppConstants.FIELDS to listOf(AppConstants.FIELD_ID, AppConstants.FIELD_NAME, AppConstants.FIELD_STATE, AppConstants.FIELD_PARTNER_ID),
-                AppConstants.LIMIT to AppConstants.LIMIT_ONE
+                AppConstants.FIELDS to listOf(
+                    AppConstants.FIELD_ID,
+                    AppConstants.FIELD_NAME,
+                    AppConstants.FIELD_STATE,
+                    AppConstants.FIELD_PARTNER_ID,
+                    AppConstants.FIELD_BARCODE
+                )
             )
         ) as Array<*>
 
-        if (result.isEmpty()) return null
-        return mapToTicket(result[0] as Map<*, *>, eventName)
+        val entradas = result.mapNotNull { item ->
+            val map = item as Map<*, *>
+            val barcode = map[AppConstants.FIELD_BARCODE] as? String
+                ?: return@mapNotNull null
+            val partnerId = map[AppConstants.FIELD_PARTNER_ID]
+            val nombreCliente = if (partnerId is Array<*> && partnerId.size > 1) {
+                partnerId[1] as String
+            } else {
+                AppConstants.SIN_NOMBRE
+            }
+            EntradaEntity(
+                barcode = barcode,
+                eventId = eventId,
+                entradaId = map[AppConstants.FIELD_ID] as Int,
+                nombreEntrada = map[AppConstants.FIELD_NAME] as String,
+                nombreComprador = nombreCliente,
+                nombreAsistente = nombreCliente,
+                estado = map[AppConstants.FIELD_STATE] as String
+            )
+        }
+
+        // Insertar solo las que no tienen syncPendiente
+        val pendientes = entradaDao.getPendientesSyncPorEvento(eventId)
+            .map { it.barcode }
+            .toSet()
+
+        val aInsertar = entradas.filter { it.barcode !in pendientes }
+        entradaDao.insertEntradas(aInsertar)
     }
+
+    override suspend fun descargarTodasLasEntradas(onProgreso: (Int) -> Unit) {
+        val eventos = eventoDao.getEventos()
+        eventos.forEachIndexed { index, evento ->
+            descargarEntradasEvento(evento.id)
+            val progreso = ((index + 1) * 100) / eventos.size
+            onProgreso(progreso)
+        }
+    }
+
+    override suspend fun hayEntradasLocales(eventId: Int): Boolean {
+        return entradaDao.countEntradasEvento(eventId) > 0
+    }
+
+    // ── Validar entrada ───────────────────────────────────
+
+    override suspend fun validateTicket(
+        code: String,
+        eventId: Int,
+        eventName: String
+    ): Ticket? {
+        return if (hayConexion()) {
+            val result = callKw(
+                model = AppConstants.MODEL_REGISTRO,
+                method = AppConstants.METHOD_SEARCH_READ,
+                args = arrayOf(arrayOf(
+                    arrayOf(AppConstants.FIELD_BARCODE, AppConstants.OPERATOR_EQUALS, code),
+                    arrayOf(AppConstants.FIELD_EVENT_ID, AppConstants.OPERATOR_EQUALS, eventId)
+                )),
+                kwargs = mapOf(
+                    AppConstants.FIELDS to listOf(
+                        AppConstants.FIELD_ID,
+                        AppConstants.FIELD_NAME,
+                        AppConstants.FIELD_STATE,
+                        AppConstants.FIELD_PARTNER_ID
+                    ),
+                    AppConstants.LIMIT to AppConstants.LIMIT_ONE
+                )
+            ) as Array<*>
+
+            if (result.isEmpty()) return null
+            val ticket = mapToTicket(result[0] as Map<*, *>, eventName)
+
+            // Actualizar Room si no tiene sync pendiente
+            val local = entradaDao.getEntrada(code, eventId)
+            if (local == null || !local.syncPendiente) {
+                entradaDao.insertEntradas(listOf(ticket.toEntity(code, eventId)))
+            }
+            ticket
+
+        } else {
+            entradaDao.getEntrada(code, eventId)?.toTicket(eventName)
+        }
+    }
+
+    // ── CheckIn ───────────────────────────────────────────
+
+    override suspend fun checkInTicket(ticketId: Int, barcode: String) {
+        // Siempre marcar en Room primero
+        entradaDao.marcarAsistido(barcode, System.currentTimeMillis())
+
+        if (hayConexion()) {
+            try {
+                callKw(
+                    model = AppConstants.MODEL_REGISTRO,
+                    method = AppConstants.METHOD_SET_DONE,
+                    args = arrayOf(arrayOf(ticketId)),
+                    kwargs = emptyMap()
+                )
+                entradaDao.marcarSincronizada(barcode)
+            } catch (e: ConexionException) {
+                lanzarSyncWorker()
+            }
+        }else{
+            lanzarSyncWorker()
+        }
+    }
+
+    private fun lanzarSyncWorker() {
+        val syncWork = androidx.work.OneTimeWorkRequestBuilder<com.dam.gs.appentradas.data.worker.SyncWorker>()
+            .setConstraints(
+                androidx.work.Constraints.Builder()
+                    .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+                    .build()
+            )
+            .build()
+
+        androidx.work.WorkManager.getInstance(context).enqueueUniqueWork(
+            "sync_entradas",
+            androidx.work.ExistingWorkPolicy.KEEP,
+            syncWork
+        )
+    }
+
+    // ── Limpieza ──────────────────────────────────────────
+
+    override suspend fun limpiarEntradasObsoletas() {
+        val ahora = System.currentTimeMillis()
+        val margen24h = 24 * 60 * 60 * 1000L
+
+        eventoDao.getEventos().forEach { evento ->
+            val terminado = evento.estado != AppConstants.STAGE_ANUNCIADO
+            val pasaron24h = evento.fechaFin > 0 &&
+                    (ahora - evento.fechaFin) > margen24h
+
+            if (terminado && pasaron24h) {
+                entradaDao.borrarEntradasEvento(evento.id)
+                eventoDao.borrarEvento(evento.id)
+            }
+        }
+    }
+
 
     private fun mapToTicket(t: Map<*, *>, eventName: String): Ticket {
         val partnerId = t[AppConstants.FIELD_PARTNER_ID]
@@ -112,15 +339,6 @@ class TicketRepositoryImpl : TicketRepository {
             cliente = cliente,
             evento = eventName,
             estado = EstadoTicket.fromString(t[AppConstants.FIELD_STATE] as String)
-        )
-    }
-
-    override suspend fun checkInTicket(ticketId: Int) {
-        callKw(
-            model = AppConstants.MODEL_REGISTRO,
-            method = AppConstants.METHOD_SET_DONE,
-            args = arrayOf(arrayOf(ticketId)),
-            kwargs = emptyMap()
         )
     }
 }

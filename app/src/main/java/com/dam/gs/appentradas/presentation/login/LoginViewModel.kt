@@ -28,6 +28,9 @@ class LoginViewModel @Inject constructor(private val repository: TicketRepositor
             _loginState.postValue(LoginState.Loading)
             try {
                 repository.authenticate(username, password)
+                repository.descargarTodasLasEntradas { progreso ->
+                    _loginState.postValue(LoginState.Descargando(progreso))
+                }
                 _loginState.postValue(LoginState.Success)
             } catch (e: CredencialesInvalidasException) {
                 _loginState.postValue(LoginState.Error(R.string.error_credenciales))
@@ -43,5 +46,6 @@ class LoginViewModel @Inject constructor(private val repository: TicketRepositor
 sealed class LoginState {
     object Loading : LoginState()
     object Success : LoginState()
+    data class Descargando(val progreso: Int) : LoginState()
     data class Error(@StringRes val messageRes: Int) : LoginState()
 }
