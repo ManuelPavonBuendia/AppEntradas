@@ -35,7 +35,7 @@ class LoginFragment : Fragment() {
 
         val prefs = requireActivity().getSharedPreferences(AppConstants.PREFS_NAME, 0)
 
-        val historialSet = prefs.getStringSet("historial_usuarios", emptySet()) ?: emptySet()
+        val historialSet = prefs.getStringSet(AppConstants.PREF_HISTORIAL_USUARIOS, emptySet()) ?: emptySet()
         val historialLista = historialSet.toList()
 
         if (historialLista.isNotEmpty()) {
@@ -64,10 +64,10 @@ class LoginFragment : Fragment() {
                     // 3. GUARDAR EN HISTORIAL: Añade el usuario actual a la lista cuando entra bien
                     val usuarioActual = binding.etUsuario.text.toString().trim()
                     if (usuarioActual.isNotEmpty()) {
-                        val actual = prefs.getStringSet("historial_usuarios", emptySet()) ?: emptySet()
+                        val actual = prefs.getStringSet(AppConstants.PREF_HISTORIAL_USUARIOS, emptySet()) ?: emptySet()
                         val nuevoHistorial = actual.toMutableSet()
                         nuevoHistorial.add(usuarioActual)
-                        prefs.edit().putStringSet("historial_usuarios", nuevoHistorial).apply()
+                        prefs.edit().putStringSet(AppConstants.PREF_HISTORIAL_USUARIOS, nuevoHistorial).apply()
                     }
 
                     findNavController().navigate(R.id.action_login_to_events)

@@ -1,6 +1,8 @@
 package com.dam.gs.appentradas.core.constants
 
 object AppConstants {
+    const val DB_ROOM_NAME = "eventum.db"
+    const val DB_ROOM_KEY = "eventum_db_key"
     const val DB_NAME = "edu-eventum1"
     const val URL_ODOO = "https://edu-eventum1.odoo.com/"
     const val FIELD_BARCODE = "barcode"
@@ -23,9 +25,11 @@ object AppConstants {
     const val METHOD_SET_DONE = "action_set_done"
     const val MODEL_EVENTO = "event.event"
     const val MODEL_REGISTRO = "event.registration"
+
     const val OPERATOR_EQUALS = "="
 
     const val PREFS_NAME = "ajustes"
+    const val PREF_HISTORIAL_USUARIOS = "historial_usuarios"
     const val PREF_IDIOMA = "idioma"
     const val PREF_IDIOMA_DEFAULT = "es"
     const val PREF_TEMA = "tema"
@@ -35,6 +39,8 @@ object AppConstants {
     const val STATE_DONE = "done"
     const val STATE_OPEN = "open"
     const val SIN_NOMBRE = "Sin nombre"
+    const val SYNC_WORKER_NAME = "sync_entradas"
+    const val SYNC_WORKER_TAG = "sync_entradas"
     const val XMLRPC_COMMON = "/xmlrpc/2/common"
     const val XMLRPC_OBJECT = "/xmlrpc/2/object"
 }

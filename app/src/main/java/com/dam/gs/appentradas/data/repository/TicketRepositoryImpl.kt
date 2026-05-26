@@ -6,7 +6,6 @@ import android.net.NetworkCapabilities
 import com.dam.gs.appentradas.core.constants.AppConstants
 import com.dam.gs.appentradas.core.exceptions.ConexionException
 import com.dam.gs.appentradas.core.exceptions.CredencialesInvalidasException
-import com.dam.gs.appentradas.core.exceptions.TicketNotFoundException
 import com.dam.gs.appentradas.data.local.dao.EntradaDao
 import com.dam.gs.appentradas.data.local.dao.EventoDao
 import com.dam.gs.appentradas.data.local.dao.SesionDao
@@ -27,6 +26,13 @@ import org.apache.xmlrpc.client.XmlRpcClientConfigImpl
 import org.mindrot.jbcrypt.BCrypt
 import java.net.URL
 import javax.inject.Inject
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import com.dam.gs.appentradas.data.worker.SyncWorker
+
 
 class TicketRepositoryImpl @Inject constructor(
     private val entradaDao: EntradaDao,
@@ -38,8 +44,6 @@ class TicketRepositoryImpl @Inject constructor(
     private var uid: Int = 0
     private var password: String = ""
 
-    // ── Red ───────────────────────────────────────────────
-
     private fun hayConexion(): Boolean {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         return cm.activeNetwork?.let {
@@ -47,8 +51,6 @@ class TicketRepositoryImpl @Inject constructor(
                 ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         } ?: false
     }
-
-    // ── XML-RPC ───────────────────────────────────────────
 
     private fun clienteCommon(): XmlRpcClient {
         val config = XmlRpcClientConfigImpl().apply {
@@ -79,8 +81,6 @@ class TicketRepositoryImpl @Inject constructor(
         }
     }
 
-    // ── Autenticación ─────────────────────────────────────
-
     override suspend fun authenticate(username: String, password: String) {
         if (hayConexion()) {
             withContext(Dispatchers.IO) {
@@ -92,7 +92,6 @@ class TicketRepositoryImpl @Inject constructor(
                 uid = result as? Int ?: throw ConexionException()
                 this@TicketRepositoryImpl.password = password
 
-                // Guardar sesión hasheada para login offline
                 val hash = BCrypt.hashpw(password, BCrypt.gensalt())
                 sesionDao.guardarSesion(
                     SesionEntity(
@@ -104,7 +103,6 @@ class TicketRepositoryImpl @Inject constructor(
                 )
             }
         } else {
-            // Sin red: verificar contra sesión guardada
             val sesion = sesionDao.getSesion() ?: throw ConexionException()
             if (sesion.username != username) throw CredencialesInvalidasException()
             if (!BCrypt.checkpw(password, sesion.passwordHash)) throw CredencialesInvalidasException()
@@ -118,7 +116,6 @@ class TicketRepositoryImpl @Inject constructor(
         password = ""
     }
 
-    // ── Eventos ───────────────────────────────────────────
 
     override suspend fun getEvents(): List<Event> {
         return if (hayConexion()) {
@@ -150,7 +147,6 @@ class TicketRepositoryImpl @Inject constructor(
                 )
             }
 
-            // Guardar en Room
             eventoDao.insertEventos(eventos.map { it.toEntity() })
             eventos
 
@@ -159,7 +155,6 @@ class TicketRepositoryImpl @Inject constructor(
         }
     }
 
-    // ── Descarga de entradas ──────────────────────────────
 
     override suspend fun descargarEntradasEvento(
         eventId: Int,
@@ -184,10 +179,15 @@ class TicketRepositoryImpl @Inject constructor(
             )
         ) as Array<*>
 
-        val entradas = result.mapNotNull { item ->
+        val entradas = mapearEntradas(result, eventId)
+        val pendientes = entradaDao.getPendientesSyncPorEvento(eventId).map { it.barcode }.toSet()
+        entradaDao.insertEntradas(entradas.filter { it.barcode !in pendientes })
+    }
+
+    private fun mapearEntradas(result: Array<*>, eventId: Int): List<EntradaEntity> {
+        return result.mapNotNull { item ->
             val map = item as Map<*, *>
-            val barcode = map[AppConstants.FIELD_BARCODE] as? String
-                ?: return@mapNotNull null
+            val barcode = map[AppConstants.FIELD_BARCODE] as? String ?: return@mapNotNull null
             val partnerId = map[AppConstants.FIELD_PARTNER_ID]
             val nombreCliente = if (partnerId is Array<*> && partnerId.size > 1) {
                 partnerId[1] as String
@@ -204,14 +204,6 @@ class TicketRepositoryImpl @Inject constructor(
                 estado = map[AppConstants.FIELD_STATE] as String
             )
         }
-
-        // Insertar solo las que no tienen syncPendiente
-        val pendientes = entradaDao.getPendientesSyncPorEvento(eventId)
-            .map { it.barcode }
-            .toSet()
-
-        val aInsertar = entradas.filter { it.barcode !in pendientes }
-        entradaDao.insertEntradas(aInsertar)
     }
 
     override suspend fun descargarTodasLasEntradas(onProgreso: (Int) -> Unit) {
@@ -227,13 +219,8 @@ class TicketRepositoryImpl @Inject constructor(
         return entradaDao.countEntradasEvento(eventId) > 0
     }
 
-    // ── Validar entrada ───────────────────────────────────
 
-    override suspend fun validateTicket(
-        code: String,
-        eventId: Int,
-        eventName: String
-    ): Ticket? {
+    override suspend fun validateTicket(code: String, eventId: Int, eventName: String): Ticket? {
         return if (hayConexion()) {
             val result = callKw(
                 model = AppConstants.MODEL_REGISTRO,
@@ -256,7 +243,6 @@ class TicketRepositoryImpl @Inject constructor(
             if (result.isEmpty()) return null
             val ticket = mapToTicket(result[0] as Map<*, *>, eventName)
 
-            // Actualizar Room si no tiene sync pendiente
             val local = entradaDao.getEntrada(code, eventId)
             if (local == null || !local.syncPendiente) {
                 entradaDao.insertEntradas(listOf(ticket.toEntity(code, eventId)))
@@ -268,10 +254,7 @@ class TicketRepositoryImpl @Inject constructor(
         }
     }
 
-    // ── CheckIn ───────────────────────────────────────────
-
     override suspend fun checkInTicket(ticketId: Int, barcode: String) {
-        // Siempre marcar en Room primero
         entradaDao.marcarAsistido(barcode, System.currentTimeMillis())
 
         if (hayConexion()) {
@@ -292,22 +275,21 @@ class TicketRepositoryImpl @Inject constructor(
     }
 
     private fun lanzarSyncWorker() {
-        val syncWork = androidx.work.OneTimeWorkRequestBuilder<com.dam.gs.appentradas.data.worker.SyncWorker>()
+        val syncWork = OneTimeWorkRequestBuilder<SyncWorker>()
             .setConstraints(
-                androidx.work.Constraints.Builder()
-                    .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
                     .build()
             )
             .build()
 
-        androidx.work.WorkManager.getInstance(context).enqueueUniqueWork(
-            "sync_entradas",
-            androidx.work.ExistingWorkPolicy.KEEP,
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            AppConstants.SYNC_WORKER_NAME,
+            ExistingWorkPolicy.KEEP,
             syncWork
         )
     }
 
-    // ── Limpieza ──────────────────────────────────────────
 
     override suspend fun limpiarEntradasObsoletas() {
         val ahora = System.currentTimeMillis()

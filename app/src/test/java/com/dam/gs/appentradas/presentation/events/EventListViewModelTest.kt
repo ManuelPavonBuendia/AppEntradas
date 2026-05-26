@@ -5,6 +5,7 @@ import com.dam.gs.appentradas.R
 import com.dam.gs.appentradas.core.exceptions.ConexionException
 import com.dam.gs.appentradas.domain.model.Event
 import com.dam.gs.appentradas.domain.usecase.GetEvents
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -17,6 +18,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import kotlin.test.assertNull
 
 @ExperimentalCoroutinesApi
 class EventListViewModelTest {
@@ -67,4 +69,12 @@ class EventListViewModelTest {
         viewModel.loadEvents()
         assert(viewModel.events.value?.isEmpty() == true)
     }
+
+    @Test fun listaVaciaNoProduceError() = runTest {
+        whenever(getEvents()).thenReturn(emptyList())
+        viewModel.loadEvents()
+        assertTrue(viewModel.events.value?.isEmpty() == true)
+        assertNull(viewModel.error.value)  // ← esto falta
+    }
+
 }

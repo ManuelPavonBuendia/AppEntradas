@@ -37,4 +37,5 @@ class CheckInTicketTest {
             assert(true)
         }
     }
+
 }

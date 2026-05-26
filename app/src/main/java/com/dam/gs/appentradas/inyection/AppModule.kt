@@ -2,6 +2,7 @@ package com.dam.gs.appentradas.injection
 
 import android.content.Context
 import androidx.room.Room
+import com.dam.gs.appentradas.core.constants.AppConstants
 import com.dam.gs.appentradas.data.local.AppDatabase
 import com.dam.gs.appentradas.data.local.dao.EntradaDao
 import com.dam.gs.appentradas.data.local.dao.EventoDao
@@ -24,12 +25,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
-        val passphrase = SQLiteDatabase.getBytes("eventum_db_key".toCharArray())
+        val passphrase = SQLiteDatabase.getBytes(AppConstants.DB_ROOM_KEY.toCharArray())
         val factory = SupportFactory(passphrase)
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            "eventum.db"
+            AppConstants.DB_ROOM_NAME
         )
             .openHelperFactory(factory)
             .build()
